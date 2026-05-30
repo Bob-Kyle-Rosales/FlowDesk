@@ -5,7 +5,7 @@ VisualStudioVersion = 18.6.11819.183 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowDesk.API", "FlowDesk.API\FlowDesk.API.csproj", "{DF3EAE14-9F74-4AC7-9D9A-6629EBCD37CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowDesk.Core", "FlowDesk.core\FlowDesk.Core.csproj", "{F9378D67-158E-4326-90F4-72A35FAC1412}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowDesk.Core", "FlowDesk.Core\FlowDesk.Core.csproj", "{F9378D67-158E-4326-90F4-72A35FAC1412}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowDesk.Infrastructure", "FlowDesk.Infrastructure\FlowDesk.Infrastructure.csproj", "{14228A2F-748E-4D96-B357-D18092492F51}"
 EndProject
