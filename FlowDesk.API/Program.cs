@@ -85,6 +85,9 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "FlowDesk API", Version = "v1" });
 });
 
+// Railway injects PORT — fall back to 8080 if not set (never 5269 in prod)
+builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PORT") ?? "8080"}");
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
