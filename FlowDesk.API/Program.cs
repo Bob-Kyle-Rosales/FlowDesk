@@ -12,8 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
-// Must run before builder.Build() so env vars are available to configuration
-DotNetEnv.Env.Load();
+// TraversePath() walks up from CWD until it finds .env (handles running from
+// FlowDesk.API/ or the solution root interchangeably)
+DotNetEnv.Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
