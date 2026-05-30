@@ -92,7 +92,8 @@ app.UseMiddleware<ExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+        options.OpenApiRoutePattern = "/swagger/v1/swagger.json");
 }
 
 app.UseCors("AllowFrontend");
