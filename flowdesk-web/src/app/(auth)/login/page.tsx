@@ -37,49 +37,58 @@ export default function LoginPage() {
     <div className="w-full max-w-sm space-y-8">
       {/* Mobile logo */}
       <div className="flex items-center gap-2 md:hidden">
-        <div className="size-8 rounded-lg bg-violet-600 flex items-center justify-center">
-          <span className="text-white font-bold text-base leading-none">◆</span>
+        <div className="size-8 rounded-md bg-[#E05A2B] flex items-center justify-center">
+          <span className="text-white font-bold" style={{ fontFamily: "var(--font-fraunces)" }}>F</span>
         </div>
-        <span className="font-semibold text-lg">FlowDesk</span>
+        <span className="font-semibold" style={{ fontFamily: "var(--font-fraunces)" }}>FlowDesk</span>
       </div>
 
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-sm text-gray-500">Sign in to your agency account</p>
+      <div>
+        <h2
+          className="text-3xl font-bold text-foreground"
+          style={{ fontFamily: "var(--font-fraunces)" }}
+        >
+          Sign in
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">Welcome back to your workspace</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@agency.com"
-            className="h-11 focus-visible:ring-violet-500/40"
+            className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30"
             {...register("email")}
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
           <Input
             id="password"
             type="password"
-            className="h-11 focus-visible:ring-violet-500/40"
+            className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30"
             {...register("password")}
           />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full h-11 bg-[#E05A2B] hover:bg-[#C94E22] text-white font-semibold"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
-      <p className="text-sm text-gray-500 text-center">
+      <p className="text-sm text-muted-foreground text-center">
         New to FlowDesk?{" "}
-        <Link href="/register" className="text-violet-600 font-medium hover:underline">
+        <Link href="/register" className="text-[#E05A2B] font-medium hover:underline">
           Create an account
         </Link>
       </p>

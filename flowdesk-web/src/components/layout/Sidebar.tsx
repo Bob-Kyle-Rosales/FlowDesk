@@ -16,13 +16,6 @@ const nav = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-// Dot grid rendered as inline style — Tailwind can't generate arbitrary radial-gradient values
-const dotGrid: React.CSSProperties = {
-  backgroundImage:
-    "radial-gradient(circle, rgba(167,139,250,0.15) 1px, transparent 1px)",
-  backgroundSize: "20px 20px",
-};
-
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -45,25 +38,22 @@ export function Sidebar() {
     .toUpperCase() ?? "??";
 
   return (
-    <aside
-      className="w-60 shrink-0 flex flex-col h-screen sticky top-0 bg-gradient-to-b from-violet-950 via-violet-900 to-violet-800"
-      style={dotGrid}
-    >
+    <aside className="w-64 shrink-0 flex flex-col h-screen sticky top-0 bg-[#2C1A0E]">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16">
-        <div className="size-8 rounded-lg bg-violet-400/20 ring-1 ring-violet-400/30 shadow-lg shadow-violet-950 flex items-center justify-center">
-          <span className="text-violet-300 font-bold text-base leading-none">◆</span>
+        <div className="size-8 rounded-md bg-[#E05A2B] flex items-center justify-center shadow-sm">
+          <span className="text-white font-bold text-sm leading-none" style={{ fontFamily: "var(--font-fraunces)" }}>F</span>
         </div>
         <div className="min-w-0">
-          <p className="font-semibold text-sm text-white truncate">{user?.organisationName ?? "FlowDesk"}</p>
-          <p className="text-xs text-violet-300/70 truncate">{user?.role}</p>
+          <p className="font-semibold text-sm text-[#F5EDE4] truncate tracking-wide">{user?.organisationName ?? "FlowDesk"}</p>
+          <p className="text-xs text-[#A07855]/70 truncate">{user?.role}</p>
         </div>
       </div>
 
-      <Separator className="bg-white/10" />
+      <Separator className="bg-white/8" />
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-5 space-y-0.5">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
@@ -71,13 +61,13 @@ export function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
+                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                 active
-                  ? "bg-white/15 text-white border-l-2 border-violet-400 pl-[10px]"
-                  : "text-violet-200/70 hover:bg-white/8 hover:text-violet-100"
+                  ? "bg-[#E05A2B] text-white"
+                  : "text-[#C4A882]/70 hover:bg-white/6 hover:text-[#F5EDE4]"
               )}
             >
-              <Icon className={cn("size-4 shrink-0", active ? "text-violet-300" : "text-violet-400/60")} />
+              <Icon className="size-4 shrink-0" />
               {label}
             </Link>
           );
@@ -85,18 +75,18 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      <Separator className="bg-white/10" />
+      <Separator className="bg-white/8" />
       <div className="p-4 flex items-center gap-3">
-        <div className="size-8 rounded-full bg-violet-400/20 ring-1 ring-violet-400/30 flex items-center justify-center shrink-0">
-          <span className="text-xs font-semibold text-violet-200">{initials}</span>
+        <div className="size-8 rounded-full bg-[#E05A2B]/20 border border-[#E05A2B]/30 flex items-center justify-center shrink-0">
+          <span className="text-xs font-semibold text-[#E05A2B]">{initials}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-          <p className="text-xs text-violet-300/60 truncate">{user?.email}</p>
+          <p className="text-sm font-medium text-[#F5EDE4] truncate">{user?.name}</p>
+          <p className="text-xs text-[#A07855]/60 truncate">{user?.email}</p>
         </div>
         <button
           onClick={handleLogout}
-          className="text-violet-400/50 hover:text-violet-200 transition-colors"
+          className="text-[#A07855]/50 hover:text-[#F5EDE4] transition-colors"
           title="Sign out"
         >
           <LogOut className="size-4" />
