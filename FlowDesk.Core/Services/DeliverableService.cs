@@ -85,9 +85,9 @@ public class DeliverableService : IDeliverableService
 
         deliverable.FileUrl = fileUrl;
 
-        // First upload moves status from Pending → UnderReview so clients can act on it.
-        // Subsequent re-uploads (after a revision) keep the existing status.
-        if (deliverable.Status == DeliverableStatus.Pending)
+        // Move to UnderReview when a file is confirmed — either the first upload (Pending → UnderReview)
+        // or a re-upload after a revision request (Revision → UnderReview).
+        if (deliverable.Status == DeliverableStatus.Pending || deliverable.Status == DeliverableStatus.Revision)
             deliverable.Status = DeliverableStatus.UnderReview;
 
         await _repo.UpdateAsync(deliverable);

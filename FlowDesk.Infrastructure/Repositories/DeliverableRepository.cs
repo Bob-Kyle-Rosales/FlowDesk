@@ -17,7 +17,6 @@ public class DeliverableRepository : IDeliverableRepository
     public async Task<IEnumerable<Deliverable>> GetAllByProjectAsync(Guid projectId)
         => await _context.Deliverables
             .Where(d => d.ProjectId == projectId)
-            .Where(d => _context.Projects.Any(p => p.Id == d.ProjectId))
             .OrderBy(d => d.CreatedAt)
             .ToListAsync();
 
