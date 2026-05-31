@@ -35,7 +35,8 @@ public class FileStorageService : IFileStorageService
     public Task<(string UploadUrl, string FileUrl)> GenerateUploadUrlAsync(
         Guid deliverableId, string fileName, string contentType)
     {
-        var key = $"deliverables/{deliverableId}/{fileName}";
+        var safeName = Path.GetFileName(fileName);
+        var key = $"deliverables/{deliverableId}/{safeName}";
 
         var request = new GetPreSignedUrlRequest
         {
