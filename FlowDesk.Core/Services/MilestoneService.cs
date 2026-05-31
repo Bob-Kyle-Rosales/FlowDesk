@@ -93,7 +93,7 @@ public class MilestoneService : IMilestoneService
         var project = await _projectRepo.GetByIdAsync(projectId)
             ?? throw new KeyNotFoundException("Project not found.");
 
-        if (_currentUser.Role == "Client" && project.ClientId != _currentUser.UserId)
+        if (_currentUser.Role == UserRole.Client.ToString() && project.ClientId != _currentUser.UserId)
             throw new KeyNotFoundException("Project not found.");
     }
 

@@ -17,6 +17,7 @@ public class MilestoneRepository : IMilestoneRepository
     public async Task<IEnumerable<Milestone>> GetAllByProjectAsync(Guid projectId)
         => await _context.Milestones
             .Where(m => m.ProjectId == projectId)
+            .Where(m => _context.Projects.Any(p => p.Id == m.ProjectId))
             .OrderBy(m => m.Order)
             .ToListAsync();
 
