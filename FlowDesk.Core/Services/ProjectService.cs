@@ -2,6 +2,7 @@ using FlowDesk.Core.DTOs.Projects;
 using FlowDesk.Core.Entities;
 using FlowDesk.Core.Enums;
 using FlowDesk.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace FlowDesk.Core.Services;
 
@@ -9,11 +10,13 @@ public class ProjectService : IProjectService
 {
     private readonly IProjectRepository _repo;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<ProjectService> _logger;
 
-    public ProjectService(IProjectRepository repo, ICurrentUserService currentUser)
+    public ProjectService(IProjectRepository repo, ICurrentUserService currentUser, ILogger<ProjectService> logger)
     {
         _repo = repo;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<ProjectResponse>> GetAllAsync()
@@ -43,13 +46,13 @@ public class ProjectService : IProjectService
         // Reload to populate Client navigation property
         var created = await _repo.GetByIdAsync(project.Id)
             ?? throw new InvalidOperationException("Failed to load created project.");
+        _logger.LogInformation("Project {ProjectId} created by org {OrgId}", created.Id, created.OrganisationId);
         return ToResponse(created);
     }
 
     public async Task<ProjectResponse> UpdateAsync(Guid id, UpdateProjectRequest request)
     {
-        var project = await _repo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Project not found.");
+        var project = await GetAccessibleProjectAsync(id);
 
         if (!Enum.TryParse<ProjectStatus>(request.Status, out var status))
             throw new InvalidOperationException($"Invalid status: {request.Status}.");
@@ -59,14 +62,15 @@ public class ProjectService : IProjectService
         project.Status = status;
 
         await _repo.UpdateAsync(project);
+        _logger.LogInformation("Project {ProjectId} updated", id);
         return ToResponse(project);
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var project = await _repo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Project not found.");
+        var project = await GetAccessibleProjectAsync(id);
         await _repo.DeleteAsync(project);
+        _logger.LogInformation("Project {ProjectId} deleted", id);
     }
 
     public async Task<ProjectStatsResponse> GetStatsAsync(Guid id)

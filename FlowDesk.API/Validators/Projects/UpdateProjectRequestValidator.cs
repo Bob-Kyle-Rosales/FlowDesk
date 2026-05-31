@@ -11,6 +11,7 @@ public class UpdateProjectRequestValidator : AbstractValidator<UpdateProjectRequ
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Status)
+            .NotEmpty()
             .Must(s => ValidStatuses.Contains(s))
             .WithMessage("Status must be Active, Paused, or Completed.");
     }
