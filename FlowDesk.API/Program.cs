@@ -34,6 +34,8 @@ builder.Services.AddScoped<IOrganisationRepository, OrganisationRepository>();
 builder.Services.AddScoped<IOrganisationService, OrganisationService>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IMilestoneRepository, MilestoneRepository>();
+builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 
 // ── JWT authentication ─────────────────────────────────────────────────────────
 var jwtSecret = builder.Configuration["JWT_SECRET"]
