@@ -12,8 +12,11 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? "Host=localhost;Port=5433;Database=flowdesk;Username=flowdesk;Password=flowdesk";
+
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql("Host=localhost;Port=5433;Database=flowdesk;Username=flowdesk;Password=flowdesk")
+            .UseNpgsql(connectionString)
             .Options;
 
         return new AppDbContext(options, new NullCurrentUserService());
