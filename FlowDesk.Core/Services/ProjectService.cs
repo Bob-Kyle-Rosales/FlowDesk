@@ -21,7 +21,7 @@ public class ProjectService : IProjectService
 
     public async Task<IEnumerable<ProjectResponse>> GetAllAsync()
     {
-        var clientFilter = _currentUser.Role == "Client" ? _currentUser.UserId : null;
+        var clientFilter = _currentUser.Role == UserRole.Client.ToString() ? _currentUser.UserId : null;
         var projects = await _repo.GetAllAsync(clientFilter);
         return projects.Select(ToResponse);
     }
@@ -97,7 +97,7 @@ public class ProjectService : IProjectService
         var project = await _repo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Project not found.");
 
-        if (_currentUser.Role == "Client" && project.ClientId != _currentUser.UserId)
+        if (_currentUser.Role == UserRole.Client.ToString() && project.ClientId != _currentUser.UserId)
             throw new KeyNotFoundException("Project not found.");
 
         return project;

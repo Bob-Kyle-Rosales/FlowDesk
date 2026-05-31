@@ -100,6 +100,8 @@ public class DeliverableService : IDeliverableService
         var deliverable = await _repo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Deliverable not found.");
 
+        await RequireClientOwnsDeliverableAsync(deliverable);
+
         if (deliverable.Status != DeliverableStatus.UnderReview)
             throw new InvalidOperationException("Only deliverables under review can be approved.");
 
@@ -117,6 +119,8 @@ public class DeliverableService : IDeliverableService
         var deliverable = await _repo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Deliverable not found.");
 
+        await RequireClientOwnsDeliverableAsync(deliverable);
+
         if (deliverable.Status != DeliverableStatus.UnderReview)
             throw new InvalidOperationException("Only deliverables under review can have a revision requested.");
 
@@ -127,6 +131,17 @@ public class DeliverableService : IDeliverableService
         await _repo.UpdateAsync(deliverable);
         _logger.LogInformation("Deliverable {DeliverableId} revision requested", id);
         return ToResponse(deliverable);
+    }
+
+    // Verifies the deliverable's project belongs to the current client caller.
+    // Called from client-only actions (Approve, RequestRevision).
+    private async Task RequireClientOwnsDeliverableAsync(Deliverable deliverable)
+    {
+        var project = await _projectRepo.GetByIdAsync(deliverable.ProjectId)
+            ?? throw new KeyNotFoundException("Deliverable not found.");
+
+        if (project.ClientId != _currentUser.UserId)
+            throw new KeyNotFoundException("Deliverable not found.");
     }
 
     private async Task RequireProjectAccessAsync(Guid projectId)

@@ -7,6 +7,7 @@ namespace FlowDesk.API.Controllers;
 
 [ApiController]
 [Route("api/organisations")]
+[Authorize]
 public class OrganisationsController : ControllerBase
 {
     private readonly IOrganisationService _service;
