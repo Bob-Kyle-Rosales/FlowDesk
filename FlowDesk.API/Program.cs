@@ -30,6 +30,8 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IOrganisationRepository, OrganisationRepository>();
+builder.Services.AddScoped<IOrganisationService, OrganisationService>();
 
 // ── JWT authentication ─────────────────────────────────────────────────────────
 var jwtSecret = builder.Configuration["JWT_SECRET"]
