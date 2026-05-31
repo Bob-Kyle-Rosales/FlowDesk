@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "dotnet FlowDesk.API.dll"
+startCommand = "dotnet /app/out/FlowDesk.API.dll"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
