@@ -103,11 +103,11 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             <Button
               type="button"
               variant="ghost"
-              onClick={() => { reset(); onOpenChange(false); }}
+              onClick={() => handleClose(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || noClients}>
+            <Button type="submit" disabled={isSubmitting || noClients || clientsLoading}>
               {isSubmitting ? "Creating…" : "Create project"}
             </Button>
           </DialogFooter>
