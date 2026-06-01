@@ -43,7 +43,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {isError && (
+      {isError && !projects && (
         <Card className="border-0 shadow-sm">
           <CardContent className="py-14 text-center">
             <div className="size-12 rounded-full bg-violet-50 flex items-center justify-center mx-auto mb-3">
@@ -81,7 +81,9 @@ export default function ProjectsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-3 font-medium">{project.clientName}</p>
                 </CardContent>
               </Card>
