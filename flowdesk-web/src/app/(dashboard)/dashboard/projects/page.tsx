@@ -1,13 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import { useState } from "react";
+import { useProjects } from "@/lib/queries";
 import { Project } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderKanban } from "lucide-react";
 import Link from "next/link";
+import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
 
 const statusStyles: Record<Project["status"], string> = {
   Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -16,10 +17,8 @@ const statusStyles: Record<Project["status"], string> = {
 };
 
 export default function ProjectsPage() {
-  const { data: projects, isLoading, isError } = useQuery<Project[]>({
-    queryKey: ["projects"],
-    queryFn: () => api.get("/api/projects").then((r) => r.data),
-  });
+  const { data: projects, isLoading, isError } = useProjects();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="p-6 space-y-6">
@@ -28,7 +27,7 @@ export default function ProjectsPage() {
           <h1 className="text-xl font-bold text-gray-900">Projects</h1>
           <p className="text-muted-foreground text-sm mt-0.5">Manage all your client projects</p>
         </div>
-        <Button size="sm" className="gap-2 h-9">
+        <Button size="sm" className="gap-2 h-9" onClick={() => setDialogOpen(true)}>
           <Plus className="size-4" /> New Project
         </Button>
       </div>
@@ -50,8 +49,8 @@ export default function ProjectsPage() {
             <div className="size-12 rounded-full bg-violet-50 flex items-center justify-center mx-auto mb-3">
               <FolderKanban className="size-5 text-violet-400" />
             </div>
-            <p className="text-sm font-medium text-gray-700">Projects API coming soon</p>
-            <p className="text-xs text-muted-foreground mt-1">This will be available in Phase 2.</p>
+            <p className="text-sm font-medium text-gray-700">Could not load projects</p>
+            <p className="text-xs text-muted-foreground mt-1">Check your connection and try again.</p>
           </CardContent>
         </Card>
       )}
@@ -90,6 +89,8 @@ export default function ProjectsPage() {
           ))}
         </div>
       )}
+
+      <CreateProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }
