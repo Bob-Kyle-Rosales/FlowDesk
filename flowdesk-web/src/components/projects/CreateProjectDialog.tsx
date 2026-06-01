@@ -80,22 +80,23 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
           <div className="space-y-2">
             <Label htmlFor="proj-client">Client</Label>
-            {noClients ? (
-              <p className="text-sm text-muted-foreground">
-                No clients yet — invite a client first.
-              </p>
-            ) : (
-              <select
-                id="proj-client"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                {...register("clientId")}
-              >
-                <option value="">Select a client…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            )}
+            <select
+              id="proj-client"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={noClients || clientsLoading}
+              {...register("clientId")}
+            >
+              {noClients ? (
+                <option value="">No clients yet — invite a client first</option>
+              ) : (
+                <>
+                  <option value="">Select a client…</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </>
+              )}
+            </select>
             {errors.clientId && <p className="text-xs text-destructive">{errors.clientId.message}</p>}
           </div>
 
