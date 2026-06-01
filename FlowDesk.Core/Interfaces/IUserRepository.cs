@@ -12,4 +12,5 @@ public interface IUserRepository
     Task<RefreshToken?> GetRefreshTokenAsync(string token);
     Task RevokeRefreshTokenAsync(Guid tokenId);
     Task SaveChangesAsync();
+    Task<IEnumerable<User>> GetClientUsersAsync();
 }

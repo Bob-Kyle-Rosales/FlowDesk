@@ -1,4 +1,5 @@
 using FlowDesk.Core.Entities;
+using FlowDesk.Core.Enums;
 using FlowDesk.Core.Interfaces;
 using FlowDesk.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -101,4 +102,14 @@ public class UserRepository : IUserRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    /// <summary>
+    /// Retrieves all Client users in the current organisation, sorted by name.
+    /// The EF global query filter on Users already scopes to the current org — no additional filter needed.
+    /// </summary>
+    public async Task<IEnumerable<User>> GetClientUsersAsync()
+        => await _context.Users
+            .Where(u => u.Role == UserRole.Client)
+            .OrderBy(u => u.Name)
+            .ToListAsync();
 }
