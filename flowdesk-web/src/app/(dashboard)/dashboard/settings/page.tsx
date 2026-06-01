@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Agency name is required"),
-  primaryColor: z.string().nullable(),
+  primaryColor: z.string(),
 });
 type OrgFormData = z.infer<typeof orgSchema>;
 
@@ -61,11 +61,11 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Name</Label>
-            <Input defaultValue={user?.name} disabled />
+            <Input value={user?.name ?? ""} disabled readOnly />
           </div>
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input defaultValue={user?.email} disabled />
+            <Input value={user?.email ?? ""} disabled readOnly />
           </div>
           <div className="space-y-2">
             <Label>Role</Label>
@@ -109,7 +109,7 @@ export default function SettingsPage() {
                 size="sm"
                 variant="ghost"
                 disabled={!isDirty}
-                onClick={() => reset()}
+                onClick={() => reset({ name: org?.name ?? "", primaryColor: org?.primaryColor ?? "#7c3aed" })}
               >
                 Cancel
               </Button>
