@@ -18,7 +18,6 @@ public class MessageRepository : IMessageRepository
         var messages = await _context.Messages
             .Include(m => m.Sender)
             .Where(m => m.ProjectId == projectId)
-            .Where(m => _context.Projects.Any(p => p.Id == m.ProjectId))
             .OrderByDescending(m => m.CreatedAt)
             .Take(limit)
             .ToListAsync();
@@ -30,9 +29,8 @@ public class MessageRepository : IMessageRepository
     {
         await _context.Messages.AddAsync(message);
         await _context.SaveChangesAsync();
-        return await _context.Messages
-            .Include(m => m.Sender)
-            .FirstAsync(m => m.Id == message.Id);
+        await _context.Entry(message).Reference(m => m.Sender).LoadAsync();
+        return message;
     }
 
     public async Task MarkReadAsync(Guid projectId, Guid currentUserId)

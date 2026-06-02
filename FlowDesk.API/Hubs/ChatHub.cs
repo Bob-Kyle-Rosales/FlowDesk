@@ -9,19 +9,27 @@ namespace FlowDesk.API.Hubs;
 public class ChatHub : Hub
 {
     private readonly IMessageRepository _repo;
+    private readonly IProjectRepository _projectRepo;
 
-    public ChatHub(IMessageRepository repo) => _repo = repo;
+    public ChatHub(IMessageRepository repo, IProjectRepository projectRepo)
+    {
+        _repo = repo;
+        _projectRepo = projectRepo;
+    }
 
     public async Task JoinProject(string projectId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"project-{projectId}");
+        if (!Guid.TryParse(projectId, out var projectGuid) ||
+            !Guid.TryParse(Context.User?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            throw new HubException("Invalid request.");
 
-        var userIdStr = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (Guid.TryParse(projectId, out var projectGuid) &&
-            Guid.TryParse(userIdStr, out var userId))
-        {
-            await _repo.MarkReadAsync(projectGuid, userId);
-        }
+        // IProjectRepository.GetByIdAsync filters by org (EF global query filter) and client ownership
+        var project = await _projectRepo.GetByIdAsync(projectGuid);
+        if (project is null)
+            throw new HubException("Access denied.");
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"project-{projectId}");
+        await _repo.MarkReadAsync(projectGuid, userId);
     }
 
     public async Task LeaveProject(string projectId)
