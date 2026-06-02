@@ -7,6 +7,7 @@ import { useProject, useProjectStats } from "@/lib/queries";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { MilestonesTab } from "@/components/projects/MilestonesTab";
 import { DeliverablesTab } from "@/components/projects/DeliverablesTab";
+import { MessagesTab } from "@/components/projects/MessagesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,9 +54,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </TabsContent>
 
         <TabsContent value="messages">
-          <div className="py-16 text-center">
-            <p className="text-sm text-muted-foreground">Real-time messaging coming in Phase 3.</p>
-          </div>
+          <MessagesTab projectId={id} />
         </TabsContent>
       </Tabs>
     </div>
