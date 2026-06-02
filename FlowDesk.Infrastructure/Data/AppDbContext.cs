@@ -44,6 +44,10 @@ public class AppDbContext : DbContext
             .HasQueryFilter(i => _currentUserService.OrganisationId != null &&
                                  i.OrganisationId == _currentUserService.OrganisationId);
 
+        modelBuilder.Entity<Message>()
+            .HasQueryFilter(m => _currentUserService.OrganisationId != null &&
+                                 m.Project.OrganisationId == _currentUserService.OrganisationId);
+
         // Unique indexes
         modelBuilder.Entity<Organisation>()
             .HasIndex(o => o.Slug).IsUnique();

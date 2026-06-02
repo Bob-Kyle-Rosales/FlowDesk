@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessages, useSendMessage } from "@/lib/queries";
+import { useMessages, useSendMessage, useMarkMessagesRead } from "@/lib/queries";
 import { useChatHub } from "@/hooks/useChatHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   const { data: history = [], isLoading, isError } = useMessages(projectId);
   const { liveMessages, connectionState } = useChatHub(projectId);
   const sendMessage = useSendMessage(projectId);
+  const markRead = useMarkMessagesRead(projectId);
 
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -27,6 +28,12 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [allMessages.length]);
+
+  useEffect(() => {
+    if (liveMessages.length > 0) {
+      markRead.mutate();
+    }
+  }, [liveMessages.length]);
 
   async function handleSend() {
     const content = input.trim();
