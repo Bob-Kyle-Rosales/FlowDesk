@@ -1,4 +1,5 @@
 using System.Text;
+using FlowDesk.API.Hubs;
 using FlowDesk.API.Middleware;
 using FlowDesk.Core.Interfaces;
 using FlowDesk.Core.Services;
@@ -38,6 +39,11 @@ builder.Services.AddScoped<IMilestoneRepository, MilestoneRepository>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<IDeliverableRepository, DeliverableRepository>();
 builder.Services.AddScoped<IDeliverableService, DeliverableService>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+
+// ── SignalR ────────────────────────────────────────────────────────────────────
+builder.Services.AddSignalR();
 
 // ── JWT authentication ─────────────────────────────────────────────────────────
 var jwtSecret = builder.Configuration["JWT_SECRET"]
@@ -61,6 +67,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = ctx =>
             {
                 ctx.Token = ctx.Request.Cookies["access_token"];
+                // Fallback for SignalR WebSocket upgrade (used when cookie is unavailable cross-origin)
+                if (string.IsNullOrEmpty(ctx.Token))
+                {
+                    var qs = ctx.Request.Query["access_token"].ToString();
+                    if (!string.IsNullOrEmpty(qs) && ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        ctx.Token = qs;
+                }
                 return Task.CompletedTask;
             }
         };
@@ -114,5 +127,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
