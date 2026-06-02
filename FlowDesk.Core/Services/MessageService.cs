@@ -53,7 +53,11 @@ public class MessageService : IMessageService
     }
 
     public async Task MarkReadAsync(Guid projectId)
-        => await _repo.MarkReadAsync(projectId, _currentUser.UserId!.Value);
+    {
+        _ = await _projectRepo.GetByIdAsync(projectId)
+            ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+        await _repo.MarkReadAsync(projectId, _currentUser.UserId!.Value);
+    }
 
     private static MessageResponse ToResponse(Message m) => new(
         m.Id,
