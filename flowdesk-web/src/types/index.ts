@@ -146,3 +146,17 @@ export interface ApiError {
   status: number;
   detail?: string;
 }
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+export interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  senderName: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface CreateMessageRequest {
+  content: string;
+}

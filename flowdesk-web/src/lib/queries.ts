@@ -6,6 +6,7 @@ import type {
   Deliverable, CreateDeliverableRequest, UploadUrlResponse,
   OrganisationResponse, UpdateOrganisationRequest,
   UserSummary, CreateProjectRequest,
+  Message,
 } from "@/types";
 
 // ── Projects ──────────────────────────────────────────────────────────────────
@@ -152,5 +153,29 @@ export function useClients() {
   return useQuery<UserSummary[]>({
     queryKey: ["clients"],
     queryFn: () => api.get("/api/users?role=Client").then(r => r.data),
+  });
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+export function useMessages(projectId: string) {
+  return useQuery<Message[]>({
+    queryKey: ["projects", projectId, "messages"],
+    queryFn: () => api.get(`/api/projects/${projectId}/messages`).then(r => r.data),
+  });
+}
+
+export function useSendMessage(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (content: string) =>
+      api.post<Message>(`/api/projects/${projectId}/messages`, { content }).then(r => r.data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["projects", projectId, "messages"] }),
+  });
+}
+
+export function useMarkMessagesRead(projectId: string) {
+  return useMutation({
+    mutationFn: () => api.patch(`/api/projects/${projectId}/messages/read`),
   });
 }
