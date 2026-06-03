@@ -1,4 +1,5 @@
 using FlowDesk.API.Hubs;
+using FlowDesk.Core.DTOs.Deliverables;
 using FlowDesk.Core.DTOs.Messages;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -14,12 +15,18 @@ public class MessagesController : ControllerBase
 {
     private readonly IMessageService _service;
     private readonly IHubContext<ChatHub> _hub;
+    private readonly IFileStorageService _fileStorage;
     private readonly ILogger<MessagesController> _logger;
 
-    public MessagesController(IMessageService service, IHubContext<ChatHub> hub, ILogger<MessagesController> logger)
+    public MessagesController(
+        IMessageService service,
+        IHubContext<ChatHub> hub,
+        IFileStorageService fileStorage,
+        ILogger<MessagesController> logger)
     {
         _service = service;
         _hub = hub;
+        _fileStorage = fileStorage;
         _logger = logger;
     }
 
@@ -41,6 +48,16 @@ public class MessagesController : ControllerBase
             _logger.LogError(ex, "SignalR broadcast failed for project {ProjectId}", projectId);
         }
         return CreatedAtAction(nameof(GetAll), new { projectId }, message);
+    }
+
+    [HttpPost("upload-url")]
+    [Authorize(Policy = "AgencyOnly")]
+    public async Task<ActionResult<UploadUrlResponse>> GetUploadUrl(
+        Guid projectId, [FromBody] GetMessageUploadUrlRequest request)
+    {
+        var (uploadUrl, fileUrl) = await _fileStorage.GenerateUploadUrlAsync(
+            $"messages/{projectId}", request.FileName, request.ContentType);
+        return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
     }
 
     [HttpPatch("read")]
