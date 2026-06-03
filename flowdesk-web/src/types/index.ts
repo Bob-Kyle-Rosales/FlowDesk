@@ -155,8 +155,15 @@ export interface Message {
   senderName: string;
   isRead: boolean;
   createdAt: string;
+  fileUrl: string | null;
 }
 
 export interface CreateMessageRequest {
   content: string;
+  fileUrl?: string | null;
+}
+
+export interface GetMessageUploadUrlRequest {
+  fileName: string;
+  contentType: string;
 }

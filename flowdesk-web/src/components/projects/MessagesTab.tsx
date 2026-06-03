@@ -40,7 +40,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     if (!content) return;
     setInput("");
     try {
-      await sendMessage.mutateAsync(content);
+      await sendMessage.mutateAsync({ content });
     } catch {
       toast.error("Failed to send message");
       setInput(content);

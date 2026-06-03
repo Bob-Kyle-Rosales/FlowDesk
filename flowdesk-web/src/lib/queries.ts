@@ -167,10 +167,20 @@ export function useMessages(projectId: string) {
 export function useSendMessage(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (content: string) =>
-      api.post<Message>(`/api/projects/${projectId}/messages`, { content }).then(r => r.data),
+    mutationFn: ({ content, fileUrl }: { content: string; fileUrl?: string | null }) =>
+      api.post<Message>(`/api/projects/${projectId}/messages`, { content, fileUrl }).then(r => r.data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["projects", projectId, "messages"] }),
+  });
+}
+
+export function useMessageUploadUrl(projectId: string) {
+  return useMutation({
+    mutationFn: ({ fileName, contentType }: { fileName: string; contentType: string }) =>
+      api.post<UploadUrlResponse>(
+        `/api/projects/${projectId}/messages/upload-url`,
+        { fileName, contentType }
+      ).then(r => r.data),
   });
 }
 
