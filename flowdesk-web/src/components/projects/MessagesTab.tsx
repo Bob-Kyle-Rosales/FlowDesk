@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessages, useSendMessage, useMarkMessagesRead } from "@/lib/queries";
+import { useMessages, useSendMessage, useMarkMessagesRead, useMessageUploadUrl } from "@/lib/queries";
 import { useChatHub } from "@/hooks/useChatHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Paperclip, X } from "lucide-react";
 import type { Message } from "@/types";
 
 export function MessagesTab({ projectId }: { projectId: string }) {
@@ -15,11 +16,16 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   const { liveMessages, connectionState } = useChatHub(projectId);
   const sendMessage = useSendMessage(projectId);
   const markRead = useMarkMessagesRead(projectId);
+  const getUploadUrl = useMessageUploadUrl(projectId);
 
   const [input, setInput] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingFileUrl, setPendingFileUrl] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Merge history and real-time arrivals, deduplicated by id, sorted chronologically
   const allMessages: Message[] = [
     ...history,
     ...liveMessages.filter(lm => !history.some(h => h.id === lm.id)),
@@ -35,12 +41,58 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     }
   }, [liveMessages.length]);
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPendingFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const { uploadUrl, fileUrl } = await getUploadUrl.mutateAsync({
+        fileName: file.name,
+        contentType: file.type || "application/octet-stream",
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = ev => {
+          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+        xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        xhr.send(file);
+      });
+
+      setPendingFileUrl(fileUrl);
+    } catch {
+      toast.error("File upload failed");
+      setPendingFile(null);
+      setPendingFileUrl(null);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function clearPendingFile() {
+    setPendingFile(null);
+    setPendingFileUrl(null);
+    setUploadProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   async function handleSend() {
     const content = input.trim();
     if (!content) return;
     setInput("");
+    const fileUrl = pendingFileUrl;
+    clearPendingFile();
     try {
-      await sendMessage.mutateAsync({ content });
+      await sendMessage.mutateAsync({ content, fileUrl });
     } catch {
       toast.error("Failed to send message");
       setInput(content);
@@ -53,6 +105,8 @@ export function MessagesTab({ projectId }: { projectId: string }) {
       handleSend();
     }
   }
+
+  const isAgency = user?.role !== "Client";
 
   if (isLoading) {
     return (
@@ -99,6 +153,16 @@ export function MessagesTab({ projectId }: { projectId: string }) {
               }`}>
                 {message.content}
               </div>
+              {message.fileUrl && (
+                <a
+                  href={message.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs underline text-muted-foreground hover:text-foreground px-1"
+                >
+                  📎 Download attachment
+                </a>
+              )}
               <span className="text-xs text-muted-foreground px-1">
                 {new Date(message.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -111,7 +175,57 @@ export function MessagesTab({ projectId }: { projectId: string }) {
         <div ref={bottomRef} />
       </div>
 
+      {pendingFile && (
+        <div className="px-4 py-2 border-t bg-muted/50 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Paperclip className="size-3.5 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground truncate flex-1">{pendingFile.name}</span>
+            {isUploading ? (
+              <span className="text-xs text-muted-foreground shrink-0">{uploadProgress}%</span>
+            ) : (
+              <button
+                type="button"
+                onClick={clearPendingFile}
+                className="text-muted-foreground hover:text-foreground shrink-0"
+                aria-label="Remove attachment"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+          {isUploading && (
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-violet-500 transition-all duration-200"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="p-4 border-t flex gap-2">
+        {isAgency && (
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || !!pendingFile}
+              className="px-2"
+              aria-label="Attach file"
+            >
+              <Paperclip className="size-4" />
+            </Button>
+          </>
+        )}
         <Input
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -121,7 +235,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
         />
         <Button
           onClick={handleSend}
-          disabled={!input.trim() || sendMessage.isPending}
+          disabled={!input.trim() || sendMessage.isPending || isUploading}
           size="sm"
         >
           Send
