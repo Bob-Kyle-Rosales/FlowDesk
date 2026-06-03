@@ -37,12 +37,12 @@ public class FileStorageService : IFileStorageService
     }
 
     public Task<(string UploadUrl, string FileUrl)> GenerateUploadUrlAsync(
-        Guid deliverableId, string fileName, string contentType)
+        string folderPath, string fileName, string contentType)
     {
         var (s3, bucket, publicUrl) = _r2.Value;
 
         var safeName = Path.GetFileName(fileName);
-        var key = $"deliverables/{deliverableId}/{safeName}";
+        var key = $"{folderPath}/{safeName}";
 
         var request = new GetPreSignedUrlRequest
         {

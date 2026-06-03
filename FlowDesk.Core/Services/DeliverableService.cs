@@ -73,7 +73,7 @@ public class DeliverableService : IDeliverableService
             ?? throw new KeyNotFoundException("Deliverable not found.");
 
         var (uploadUrl, fileUrl) = await _fileStorage.GenerateUploadUrlAsync(
-            deliverable.Id, fileName, contentType);
+            $"deliverables/{deliverable.Id}", fileName, contentType);
 
         return new UploadUrlResponse(uploadUrl, fileUrl);
     }
