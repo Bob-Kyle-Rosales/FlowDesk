@@ -1,7 +1,9 @@
+using FlowDesk.API.Hubs;
 using FlowDesk.Core.DTOs.Deliverables;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FlowDesk.API.Controllers;
 
@@ -10,10 +12,17 @@ namespace FlowDesk.API.Controllers;
 public class DeliverablesController : ControllerBase
 {
     private readonly IDeliverableService _service;
+    private readonly IHubContext<ProjectHub> _hub;
+    private readonly ILogger<DeliverablesController> _logger;
 
-    public DeliverablesController(IDeliverableService service)
+    public DeliverablesController(
+        IDeliverableService service,
+        IHubContext<ProjectHub> hub,
+        ILogger<DeliverablesController> logger)
     {
         _service = service;
+        _hub = hub;
+        _logger = logger;
     }
 
     [HttpGet("api/projects/{projectId:guid}/deliverables")]
@@ -45,16 +54,41 @@ public class DeliverablesController : ControllerBase
     [Authorize(Policy = "AgencyOnly")]
     public async Task<ActionResult<DeliverableResponse>> ConfirmUpload(
         Guid id, [FromBody] ConfirmUploadRequest request)
-        => Ok(await _service.ConfirmUploadAsync(id, request.FileUrl));
+    {
+        var result = await _service.ConfirmUploadAsync(id, request.FileUrl);
+        await BroadcastDeliverableUpdated(result);
+        return Ok(result);
+    }
 
     [HttpPatch("api/deliverables/{id:guid}/approve")]
     [Authorize(Policy = "ClientOnly")]
     public async Task<ActionResult<DeliverableResponse>> Approve(Guid id)
-        => Ok(await _service.ApproveAsync(id));
+    {
+        var result = await _service.ApproveAsync(id);
+        await BroadcastDeliverableUpdated(result);
+        return Ok(result);
+    }
 
     [HttpPatch("api/deliverables/{id:guid}/revision")]
     [Authorize(Policy = "ClientOnly")]
     public async Task<ActionResult<DeliverableResponse>> RequestRevision(
         Guid id, [FromBody] RevisionRequest request)
-        => Ok(await _service.RequestRevisionAsync(id, request));
+    {
+        var result = await _service.RequestRevisionAsync(id, request);
+        await BroadcastDeliverableUpdated(result);
+        return Ok(result);
+    }
+
+    private async Task BroadcastDeliverableUpdated(DeliverableResponse result)
+    {
+        try
+        {
+            await _hub.Clients.Group($"proj-{result.ProjectId}")
+                .SendAsync("OnDeliverableUpdated", result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ProjectHub broadcast failed for project {ProjectId}", result.ProjectId);
+        }
+    }
 }
