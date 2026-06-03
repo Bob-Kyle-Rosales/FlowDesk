@@ -8,5 +8,6 @@ public class CreateMessageRequestValidator : AbstractValidator<CreateMessageRequ
     public CreateMessageRequestValidator()
     {
         RuleFor(x => x.Content).NotEmpty().MaximumLength(4000);
+        RuleFor(x => x.FileUrl).MaximumLength(2000).When(x => x.FileUrl is not null);
     }
 }

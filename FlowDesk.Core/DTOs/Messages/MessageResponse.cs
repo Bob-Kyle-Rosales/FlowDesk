@@ -6,4 +6,5 @@ public record MessageResponse(
     Guid SenderId,
     string SenderName,
     bool IsRead,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? FileUrl);

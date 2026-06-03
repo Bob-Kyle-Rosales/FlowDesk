@@ -41,6 +41,7 @@ public class MessageService : IMessageService
         {
             Id = Guid.NewGuid(),
             Content = request.Content,
+            FileUrl = request.FileUrl,
             ProjectId = projectId,
             SenderId = _currentUser.UserId!.Value,
             IsRead = false,
@@ -65,5 +66,6 @@ public class MessageService : IMessageService
         m.SenderId,
         m.Sender?.Name ?? string.Empty,
         m.IsRead,
-        m.CreatedAt);
+        m.CreatedAt,
+        m.FileUrl);
 }
