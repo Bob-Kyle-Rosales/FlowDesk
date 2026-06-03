@@ -1,7 +1,9 @@
+using FlowDesk.API.Hubs;
 using FlowDesk.Core.DTOs.Milestones;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FlowDesk.API.Controllers;
 
@@ -10,10 +12,17 @@ namespace FlowDesk.API.Controllers;
 public class MilestonesController : ControllerBase
 {
     private readonly IMilestoneService _service;
+    private readonly IHubContext<ProjectHub> _hub;
+    private readonly ILogger<MilestonesController> _logger;
 
-    public MilestonesController(IMilestoneService service)
+    public MilestonesController(
+        IMilestoneService service,
+        IHubContext<ProjectHub> hub,
+        ILogger<MilestonesController> logger)
     {
         _service = service;
+        _hub = hub;
+        _logger = logger;
     }
 
     [HttpGet("api/projects/{projectId:guid}/milestones")]
@@ -47,5 +56,17 @@ public class MilestonesController : ControllerBase
     [Authorize(Policy = "AgencyOnly")]
     public async Task<ActionResult<MilestoneResponse>> UpdateStatus(
         Guid id, [FromBody] UpdateMilestoneStatusRequest request)
-        => Ok(await _service.UpdateStatusAsync(id, request));
+    {
+        var result = await _service.UpdateStatusAsync(id, request);
+        try
+        {
+            await _hub.Clients.Group($"proj-{result.ProjectId}")
+                .SendAsync("OnMilestoneUpdated", result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ProjectHub broadcast failed for project {ProjectId}", result.ProjectId);
+        }
+        return Ok(result);
+    }
 }
