@@ -4,6 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useProject, useProjectStats } from "@/lib/queries";
+import { useProjectHub } from "@/hooks/useProjectHub";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { MilestonesTab } from "@/components/projects/MilestonesTab";
 import { DeliverablesTab } from "@/components/projects/DeliverablesTab";
@@ -14,6 +15,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const { id } = use(params);
   const { data: project, isLoading, isError } = useProject(id);
   const { data: stats } = useProjectStats(id);
+  useProjectHub(id);
 
   if (isLoading) {
     return <div className="p-8 text-sm text-muted-foreground animate-pulse">Loading project...</div>;
