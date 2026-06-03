@@ -273,7 +273,7 @@ graph TD
     ProjectDetail["/dashboard/projects/[id]"]
     Milestones["Tab: Milestones"]
     Deliverables["Tab: Deliverables"]
-    Messages["Tab: Messages\n(Phase 3 stub)"]
+    Messages["Tab: Messages\n(live chat ✅)"]
     Invoices["/dashboard/invoices\n(Phase 4 stub)"]
     Settings["/dashboard/settings"]
     Portal["/portal/[slug]\n(Phase 5)"]
@@ -306,6 +306,39 @@ graph LR
     Axios -- "withCredentials\n(sends cookies)" --> API["ASP.NET Core API"]
     Hook --> Cache["Query Cache\n(auto-invalidated\non mutation success)"]
 ```
+
+---
+
+## SignalR Architecture
+
+Two hubs run alongside the REST API. Both use the `access_token` httpOnly cookie for auth on the WebSocket upgrade handshake.
+
+```mermaid
+graph LR
+    subgraph "Frontend Hooks"
+        ChatHook["useChatHub\n(liveMessages state)"]
+        ProjectHook["useProjectHub\n(invalidates queries)"]
+    end
+
+    subgraph "ASP.NET Core"
+        ChatHub["/hubs/chat\nChatHub"]
+        ProjectHub["/hubs/project\nProjectHub"]
+        Controller["Controllers\n(REST write path)"]
+    end
+
+    ChatHook -- "JoinProject\nLeaveProject" --> ChatHub
+    ChatHub -- "ReceiveMessage" --> ChatHook
+
+    ProjectHook -- "JoinProject\nLeaveProject" --> ProjectHub
+    ProjectHub -- "OnMilestoneUpdated\nOnDeliverableUpdated" --> ProjectHook
+
+    Controller -- "IHubContext broadcast\n(after REST mutation)" --> ChatHub
+    Controller -- "IHubContext broadcast\n(after status change)" --> ProjectHub
+```
+
+**ChatHub group:** `project-{projectId}` — joined when Messages tab is opened; messages broadcast from `MessagesController.Send` via `IHubContext<ChatHub>`.
+
+**ProjectHub group:** `proj-{projectId}` — joined when project detail page loads; broadcasts fired from `MilestonesController.UpdateStatus` and `DeliverablesController` approve/revision/confirm actions.
 
 ---
 
@@ -363,6 +396,34 @@ graph LR
 
 ---
 
+## What Was Built — Phase 3
+
+### Phase 3A ✅ — Real-Time Chat (2026-06-02)
+
+**Goal:** Live messaging between agency and client on each project, persisted to the database with read receipts.
+
+| What | Detail |
+|---|---|
+| `ChatHub` (`/hubs/chat`) | `JoinProject` validates org membership, marks messages read; `LeaveProject` removes from group |
+| `MessagesController` | `GET|POST /api/projects/{id}/messages`, `PATCH .../read`; POST broadcasts via `IHubContext<ChatHub>` |
+| `MessageService` + `MessageRepository` | EF org filter on `Message` via `Project.OrganisationId` navigation |
+| `useChatHub` hook | Manages `HubConnection` lifecycle, auto-reconnect, appends live messages to state |
+| `MessagesTab` component | History + live messages deduped by id; own messages right-aligned; Enter to send; auto-scroll |
+| Read receipts | Auto-marked on `JoinProject` (hub) and when live messages arrive (`useMarkMessagesRead`) |
+
+### Phase 3B ✅ — Live Status Push (2026-06-02)
+
+**Goal:** When agency cycles a milestone status or client approves/revises a deliverable, every browser watching that project sees the change immediately.
+
+| What | Detail |
+|---|---|
+| `ProjectHub` (`/hubs/project`) | Receive-only; `JoinProject` / `LeaveProject` manage group `proj-{id}` |
+| `MilestonesController` | Broadcasts `OnMilestoneUpdated` after `PATCH /milestones/{id}/status` |
+| `DeliverablesController` | Broadcasts `OnDeliverableUpdated` after confirm-upload, approve, and request-revision |
+| `useProjectHub` hook | On `OnMilestoneUpdated` → invalidates milestones + stats queries; on `OnDeliverableUpdated` → invalidates deliverables + stats |
+
+---
+
 ## Current State (2026-06-02)
 
 ```mermaid
@@ -375,9 +436,10 @@ gantt
     Backend CRUD               :done, p2b, 2026-05-31, 1d
     Frontend Dashboard         :done, p2f, 2026-06-01, 1d
     section Phase 3
-    SignalR Chat (planning)    :active, p3, 2026-06-02, 7d
+    Chat + ProjectHub          :done, p3, 2026-06-02, 1d
+    File attachments (3C)      :active, p3c, after p3, 3d
     section Phase 4
-    Stripe & Invoices          :p4, after p3, 7d
+    Stripe & Invoices          :p4, after p3c, 7d
     section Phase 5
     AI Reports & Client Portal :p5, after p4, 7d
     section Phase 6
@@ -390,9 +452,7 @@ gantt
 
 | Feature | Phase |
 |---|---|
-| Real-time chat (SignalR ChatHub) | 3 |
-| Live status push (SignalR ProjectHub) | 3 |
-| Message file attachments | 3 |
+| Message file attachments (chat) | 3C |
 | Invoice CRUD | 4 |
 | Stripe Connect payments | 4 |
 | SendGrid email reminders | 4 |
@@ -417,6 +477,10 @@ gantt
 | All TanStack Query hooks in `lib/queries.ts` | Single source of truth for server state; easy to find and modify |
 | Scalar instead of Swagger UI | Cleaner DX, same OpenAPI spec underneath |
 | Railway + Nixpacks (no Dockerfile) | Zero-config .NET deployment |
+| REST write + SignalR broadcast (not hub send methods) | Single write path, easy to debug; broadcast failure never corrupts the REST response |
+| ProjectHub receive-only (no send methods) | Clients only receive status pushes; mutations stay as REST calls with full validation |
+| TanStack Query invalidation on SignalR events (not cache patching) | Simpler, always-fresh, no manual cache surgery for small data sets |
+| EF query filter on `Message` via navigation (`m.Project.OrganisationId`) | Consistent multi-tenant isolation without adding `OrganisationId` column to Message |
 
 ---
 
@@ -437,6 +501,6 @@ CLOUDFLARE_R2_PUBLIC_URL     # Public file domain (e.g. https://files.yourdomain
 ### Frontend (`flowdesk-web/.env.local`)
 ```
 NEXT_PUBLIC_API_URL           # http://localhost:5269 (dev)
-NEXT_PUBLIC_SIGNALR_URL       # (Phase 3)
+NEXT_PUBLIC_SIGNALR_URL       # http://localhost:5269 (dev) — used by useChatHub + useProjectHub
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY  # (Phase 4)
 ```
