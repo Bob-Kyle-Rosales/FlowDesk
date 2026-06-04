@@ -91,7 +91,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 onClick={handleDelete}
                 disabled={deleteInvoice.isPending}
               >
-                <Trash2 className="size-3.5" /> Delete
+                <Trash2 className="size-3.5" /> {deleteInvoice.isPending ? "Deleting…" : "Delete"}
               </Button>
             </>
           )}
