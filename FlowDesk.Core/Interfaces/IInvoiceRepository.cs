@@ -4,7 +4,7 @@ namespace FlowDesk.Core.Interfaces;
 
 public interface IInvoiceRepository
 {
-    Task<IEnumerable<Invoice>> GetAllAsync();
+    Task<IEnumerable<Invoice>> GetAllAsync(Guid? clientIdFilter);
     Task<Invoice?> GetByIdAsync(Guid id);
     Task<Invoice> CreateAsync(Invoice invoice);
     Task UpdateAsync(Invoice invoice);

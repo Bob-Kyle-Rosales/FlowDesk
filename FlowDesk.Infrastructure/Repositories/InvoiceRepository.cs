@@ -11,13 +11,19 @@ public class InvoiceRepository : IInvoiceRepository
 
     public InvoiceRepository(AppDbContext context) => _context = context;
 
-    public async Task<IEnumerable<Invoice>> GetAllAsync()
-        => await _context.Invoices
+    public async Task<IEnumerable<Invoice>> GetAllAsync(Guid? clientIdFilter)
+    {
+        var query = _context.Invoices
             .Include(i => i.Client)
             .Include(i => i.Project)
             .Include(i => i.Items)
-            .OrderByDescending(i => i.CreatedAt)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (clientIdFilter.HasValue)
+            query = query.Where(i => i.ClientId == clientIdFilter.Value);
+
+        return await query.OrderByDescending(i => i.CreatedAt).ToListAsync();
+    }
 
     public async Task<Invoice?> GetByIdAsync(Guid id)
         => await _context.Invoices

@@ -23,10 +23,18 @@ public class InvoiceService : IInvoiceService
     }
 
     public async Task<IEnumerable<InvoiceResponse>> GetAllAsync()
-        => (await _repo.GetAllAsync()).Select(ToResponse);
+    {
+        var clientFilter = _currentUser.Role == UserRole.Client.ToString() ? _currentUser.UserId : null;
+        return (await _repo.GetAllAsync(clientFilter)).Select(ToResponse);
+    }
 
     public async Task<InvoiceResponse> GetByIdAsync(Guid id)
-        => ToResponse(await GetOrThrowAsync(id));
+    {
+        var invoice = await GetOrThrowAsync(id);
+        if (_currentUser.Role == UserRole.Client.ToString() && invoice.ClientId != _currentUser.UserId)
+            throw new UnauthorizedAccessException("Access denied.");
+        return ToResponse(invoice);
+    }
 
     public async Task<InvoiceResponse> CreateAsync(CreateInvoiceRequest request)
     {
