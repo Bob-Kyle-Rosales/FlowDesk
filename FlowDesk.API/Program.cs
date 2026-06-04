@@ -41,6 +41,8 @@ builder.Services.AddScoped<IDeliverableRepository, DeliverableRepository>();
 builder.Services.AddScoped<IDeliverableService, DeliverableService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // ── SignalR ────────────────────────────────────────────────────────────────────
 builder.Services.AddSignalR();
