@@ -76,6 +76,7 @@ public class InvoiceService : IInvoiceService
         await _repo.UpdateAsync(invoice);
         var updated = await _repo.GetByIdAsync(id)
             ?? throw new InvalidOperationException("Failed to load updated invoice.");
+        _logger.LogInformation("Invoice {InvoiceId} updated", id);
         return ToResponse(updated);
     }
 
