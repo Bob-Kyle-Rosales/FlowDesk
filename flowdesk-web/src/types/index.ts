@@ -128,16 +128,49 @@ export interface UploadUrlResponse {
 }
 
 // ── Invoices ──────────────────────────────────────────────────────────────────
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
 export interface Invoice {
   id: string;
-  organisationId: string;
+  title: string;
   projectId: string | null;
+  projectName: string | null;
   clientId: string;
   clientName: string;
   status: "Draft" | "Sent" | "Paid" | "Overdue";
   total: number;
   dueDate: string | null;
+  paidAt: string | null;
   createdAt: string;
+  items: InvoiceItem[];
+}
+
+export interface InvoiceItemRequest {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CreateInvoiceRequest {
+  title: string;
+  clientId: string;
+  projectId?: string | null;
+  dueDate?: string | null;
+  items: InvoiceItemRequest[];
+}
+
+export interface UpdateInvoiceRequest {
+  title: string;
+  clientId: string;
+  projectId?: string | null;
+  dueDate?: string | null;
+  items: InvoiceItemRequest[];
 }
 
 // ── Errors ────────────────────────────────────────────────────────────────────

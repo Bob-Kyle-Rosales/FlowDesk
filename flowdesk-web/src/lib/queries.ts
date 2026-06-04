@@ -7,6 +7,7 @@ import type {
   OrganisationResponse, UpdateOrganisationRequest,
   UserSummary, CreateProjectRequest,
   Message,
+  Invoice, CreateInvoiceRequest, UpdateInvoiceRequest,
 } from "@/types";
 
 // ── Projects ──────────────────────────────────────────────────────────────────
@@ -187,5 +188,49 @@ export function useMessageUploadUrl(projectId: string) {
 export function useMarkMessagesRead(projectId: string) {
   return useMutation({
     mutationFn: () => api.patch(`/api/projects/${projectId}/messages/read`),
+  });
+}
+
+// ── Invoices ──────────────────────────────────────────────────────────────────
+export function useInvoices() {
+  return useQuery<Invoice[]>({
+    queryKey: ["invoices"],
+    queryFn: () => api.get<Invoice[]>("/api/invoices").then(r => r.data),
+  });
+}
+
+export function useInvoice(id: string) {
+  return useQuery<Invoice>({
+    queryKey: ["invoices", id],
+    queryFn: () => api.get<Invoice>(`/api/invoices/${id}`).then(r => r.data),
+  });
+}
+
+export function useCreateInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateInvoiceRequest) =>
+      api.post<Invoice>("/api/invoices", request).then(r => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+  });
+}
+
+export function useUpdateInvoice(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: UpdateInvoiceRequest) =>
+      api.put<Invoice>(`/api/invoices/${id}`, request).then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", id] });
+    },
+  });
+}
+
+export function useDeleteInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/api/invoices/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
   });
 }
