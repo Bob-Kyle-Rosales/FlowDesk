@@ -7,7 +7,7 @@ import type {
   OrganisationResponse, UpdateOrganisationRequest,
   UserSummary, CreateProjectRequest,
   Message,
-  Invoice, CreateInvoiceRequest, UpdateInvoiceRequest,
+  Invoice, InvoiceItemRequest, CreateInvoiceRequest, UpdateInvoiceRequest,
 } from "@/types";
 
 // ── Projects ──────────────────────────────────────────────────────────────────
