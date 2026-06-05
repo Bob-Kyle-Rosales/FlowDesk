@@ -234,3 +234,11 @@ export function useDeleteInvoice() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
   });
 }
+
+// ── Stripe ────────────────────────────────────────────────────────────────────
+export function useStripeConnectUrl() {
+  return useMutation({
+    mutationFn: () =>
+      api.get<{ url: string }>("/api/stripe/connect-url").then(r => r.data),
+  });
+}

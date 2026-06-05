@@ -6,14 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOrganisation, useUpdateOrganisation } from "@/lib/queries";
+import { useOrganisation, useUpdateOrganisation, useStripeConnectUrl } from "@/lib/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/api";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Agency name is required"),
@@ -25,6 +24,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { data: org } = useOrganisation();
   const updateOrg = useUpdateOrganisation();
+  const getConnectUrl = useStripeConnectUrl();
   const [connectingStripe, setConnectingStripe] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isSubmitting } } = useForm<OrgFormData>({
@@ -66,8 +66,8 @@ export default function SettingsPage() {
   async function handleConnectStripe() {
     setConnectingStripe(true);
     try {
-      const { data } = await api.get<{ url: string }>("/api/stripe/connect-url");
-      window.location.href = data.url;
+      const { url } = await getConnectUrl.mutateAsync();
+      window.location.href = url;
     } catch {
       toast.error("Failed to start Stripe Connect. Check STRIPE_CLIENT_ID is set.");
       setConnectingStripe(false);
@@ -163,7 +163,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Badge className="bg-green-100 text-green-700 border-green-200">Connected</Badge>
               <span className="text-sm text-muted-foreground font-mono">
-                {org!.stripeAccountId}
+                {org?.stripeAccountId}
               </span>
             </div>
           ) : (
