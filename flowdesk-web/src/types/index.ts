@@ -33,6 +33,7 @@ export interface OrganisationResponse {
   primaryColor: string | null;
   plan: string;
   createdAt: string;
+  stripeAccountId: string | null;
 }
 
 export interface UpdateOrganisationRequest {
