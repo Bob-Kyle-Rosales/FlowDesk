@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using FlowDesk.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
-using Stripe;
 
 namespace FlowDesk.Infrastructure.Services;
 
@@ -55,10 +55,13 @@ public class StripeService : IStripeService
                 $"Stripe OAuth token exchange failed ({(int)response.StatusCode}): {errorBody}");
         }
 
-        var token = await response.Content.ReadFromJsonAsync<OAuthToken>()
+        var token = await response.Content.ReadFromJsonAsync<StripeOAuthTokenResponse>()
             ?? throw new InvalidOperationException("Failed to deserialize Stripe OAuth token response.");
 
         return token.StripeUserId
             ?? throw new InvalidOperationException("Stripe did not return a StripeUserId.");
     }
+
+    private record StripeOAuthTokenResponse(
+        [property: JsonPropertyName("stripe_user_id")] string? StripeUserId);
 }
