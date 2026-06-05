@@ -43,6 +43,8 @@ builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IStripeService, StripeService>();
 
 // ── SignalR ────────────────────────────────────────────────────────────────────
 builder.Services.AddSignalR();
