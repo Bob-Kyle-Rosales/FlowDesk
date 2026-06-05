@@ -14,6 +14,7 @@ public class Organisation
     public string? PrimaryColor { get; set; }
     public string? CustomDomain { get; set; }
     public string Plan { get; set; } = "starter";
+    public string? StripeAccountId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<User> Users { get; set; } = new List<User>();

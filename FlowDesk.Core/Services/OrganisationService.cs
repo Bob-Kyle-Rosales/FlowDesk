@@ -35,5 +35,5 @@ public class OrganisationService : IOrganisationService
     }
 
     private static OrganisationResponse ToResponse(Organisation org)
-        => new(org.Id, org.Name, org.Slug, org.PrimaryColor, org.Plan, org.CreatedAt);
+        => new(org.Id, org.Name, org.Slug, org.PrimaryColor, org.Plan, org.CreatedAt, org.StripeAccountId);
 }

@@ -1,3 +1,4 @@
+// FlowDesk.Core/DTOs/Organisations/OrganisationResponse.cs
 namespace FlowDesk.Core.DTOs.Organisations;
 
 public record OrganisationResponse(
@@ -6,4 +7,5 @@ public record OrganisationResponse(
     string Slug,
     string? PrimaryColor,
     string Plan,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? StripeAccountId);
