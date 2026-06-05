@@ -48,7 +48,12 @@ public class StripeService : IStripeService
         var response = await client.PostAsync(
             "https://connect.stripe.com/oauth/token", body);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(
+                $"Stripe OAuth token exchange failed ({(int)response.StatusCode}): {errorBody}");
+        }
 
         var token = await response.Content.ReadFromJsonAsync<OAuthToken>()
             ?? throw new InvalidOperationException("Failed to deserialize Stripe OAuth token response.");
