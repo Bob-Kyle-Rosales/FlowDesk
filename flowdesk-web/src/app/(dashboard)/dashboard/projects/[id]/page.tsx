@@ -1,21 +1,68 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useProject, useProjectStats } from "@/lib/queries";
 import { useProjectHub } from "@/hooks/useProjectHub";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { MilestonesTab } from "@/components/projects/MilestonesTab";
 import { DeliverablesTab } from "@/components/projects/DeliverablesTab";
 import { MessagesTab } from "@/components/projects/MessagesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: project, isLoading, isError } = useProject(id);
   const { data: stats } = useProjectStats(id);
+  const { user } = useAuth();
   useProjectHub(id);
+
+  const [reportText, setReportText] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  async function generateReport() {
+    setIsGenerating(true);
+    setReportText("");
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5269";
+      const response = await fetch(`${apiUrl}/api/projects/${id}/report`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const token = line.slice("data: ".length);
+            setReportText((prev) => prev + token);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Report generation failed", err);
+      setReportText((prev) => prev + "\n\n[Generation failed. Please try again.]");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   if (isLoading) {
     return <div className="p-8 text-sm text-muted-foreground animate-pulse">Loading project...</div>;
@@ -31,6 +78,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       </div>
     );
   }
+
+  const isAgency = user?.role !== "Client";
 
   return (
     <div className="p-6 space-y-6">
@@ -59,6 +108,40 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <MessagesTab projectId={id} />
         </TabsContent>
       </Tabs>
+
+      {isAgency && (
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">AI Status Report</h2>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={generateReport}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                  Generating…
+                </>
+              ) : reportText ? (
+                "Regenerate"
+              ) : (
+                "Generate Report"
+              )}
+            </Button>
+          </div>
+
+          {(reportText || isGenerating) && (
+            <div className="bg-muted/50 rounded-xl border p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+              {reportText}
+              {isGenerating && (
+                <span className="inline-block w-2 h-4 bg-foreground/60 animate-pulse ml-0.5 align-text-bottom" />
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
