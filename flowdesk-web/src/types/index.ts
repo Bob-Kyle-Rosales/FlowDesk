@@ -31,6 +31,7 @@ export interface OrganisationResponse {
   name: string;
   slug: string;
   primaryColor: string | null;
+  logoUrl: string | null;
   plan: string;
   createdAt: string;
   stripeAccountId: string | null;
@@ -39,6 +40,13 @@ export interface OrganisationResponse {
 export interface UpdateOrganisationRequest {
   name: string;
   primaryColor: string | null;
+}
+
+export interface PublicOrganisationResponse {
+  name: string;
+  slug: string;
+  primaryColor: string | null;
+  logoUrl: string | null;
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────────

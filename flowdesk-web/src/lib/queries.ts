@@ -149,6 +149,23 @@ export function useUpdateOrganisation() {
   });
 }
 
+export function useLogoUploadUrl() {
+  return useMutation({
+    mutationFn: ({ fileName, contentType }: { fileName: string; contentType: string }) =>
+      api.post<UploadUrlResponse>("/api/organisations/me/logo-upload-url", { fileName, contentType })
+        .then(r => r.data),
+  });
+}
+
+export function useUpdateLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (logoUrl: string) =>
+      api.patch<OrganisationResponse>("/api/organisations/me/logo", { logoUrl }).then(r => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["organisation"] }),
+  });
+}
+
 // ── Users (client picker) ─────────────────────────────────────────────────────
 export function useClients() {
   return useQuery<UserSummary[]>({
