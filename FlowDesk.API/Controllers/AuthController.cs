@@ -67,6 +67,14 @@ public class AuthController : ControllerBase
         return Ok(new { inviteLink });
     }
 
+    [HttpPost("accept-invite")]
+    public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteRequest request)
+    {
+        var (tokens, user) = await _authService.AcceptInviteAsync(request);
+        SetTokenCookies(tokens);
+        return StatusCode(201, user);
+    }
+
     private void SetTokenCookies(TokenPair tokens)
     {
         var isProd = !HttpContext.RequestServices

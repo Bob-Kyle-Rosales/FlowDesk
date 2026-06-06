@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using FlowDesk.Core.DTOs.Auth;
 using FlowDesk.Core.Entities;
+using FlowDesk.Core.Enums;
 using FlowDesk.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,17 +15,20 @@ namespace FlowDesk.Core.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IOrganisationRepository _orgRepo;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _email;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUserRepository userRepository,
+        IOrganisationRepository orgRepo,
         IConfiguration configuration,
         IEmailService email,
         ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
+        _orgRepo = orgRepo;
         _configuration = configuration;
         _email = email;
         _logger = logger;
@@ -60,7 +64,7 @@ public class AuthService : IAuthService
         await _userRepository.CreateWithOrganisationAsync(user, organisation);
 
         var tokens = await IssueTokensAsync(user);
-        return (tokens, ToAuthResponse(user, organisation.Name));
+        return (tokens, ToAuthResponse(user, organisation.Name, organisation.Slug));
     }
 
     /// <summary>
@@ -76,7 +80,7 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid credentials.");
 
         var tokens = await IssueTokensAsync(user);
-        return (tokens, ToAuthResponse(user, user.Organisation.Name));
+        return (tokens, ToAuthResponse(user, user.Organisation.Name, user.Organisation.Slug));
     }
 
     /// <summary>
@@ -94,7 +98,7 @@ public class AuthService : IAuthService
         await _userRepository.RevokeRefreshTokenAsync(stored.Id);
 
         var tokens = await IssueTokensAsync(stored.User);
-        return (tokens, ToAuthResponse(stored.User, stored.User.Organisation.Name));
+        return (tokens, ToAuthResponse(stored.User, stored.User.Organisation.Name, stored.User.Organisation.Slug));
     }
 
     /// <summary>
@@ -164,6 +168,58 @@ public class AuthService : IAuthService
         return inviteLink;
     }
 
+    public async Task<(TokenPair Tokens, AuthResponse User)> AcceptInviteAsync(AcceptInviteRequest request)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
+
+        ClaimsPrincipal principal;
+        try
+        {
+            principal = tokenHandler.ValidateToken(request.Token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            }, out _);
+        }
+        catch
+        {
+            throw new UnauthorizedAccessException("Invalid or expired invite token.");
+        }
+
+        var email = principal.FindFirst("invite_email")?.Value
+            ?? throw new UnauthorizedAccessException("Invalid invite token.");
+        var roleStr = principal.FindFirst("invite_role")?.Value
+            ?? throw new UnauthorizedAccessException("Invalid invite token.");
+        var orgStr = principal.FindFirst("org")?.Value
+            ?? throw new UnauthorizedAccessException("Invalid invite token.");
+
+        if (await _userRepository.EmailExistsAsync(email))
+            throw new InvalidOperationException("Email already registered.");
+
+        var orgId = Guid.Parse(orgStr);
+        var org = await _orgRepo.GetByIdAsync(orgId)
+            ?? throw new InvalidOperationException("Organisation not found.");
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = email.ToLower(),
+            Name = request.Name,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
+            Role = Enum.Parse<UserRole>(roleStr),
+            OrganisationId = orgId
+        };
+
+        await _userRepository.CreateAsync(user);
+
+        var tokens = await IssueTokensAsync(user);
+        return (tokens, ToAuthResponse(user, org.Name, org.Slug));
+    }
+
     private async Task<TokenPair> IssueTokensAsync(User user)
     {
         var accessToken = GenerateAccessToken(user);
@@ -214,8 +270,8 @@ public class AuthService : IAuthService
                .Replace("'", "")
                .Trim('-');
 
-    private static AuthResponse ToAuthResponse(User user, string organisationName)
-        => new(user.Id, user.Name, user.Email, user.Role.ToString(), organisationName);
+    private static AuthResponse ToAuthResponse(User user, string organisationName, string organisationSlug)
+        => new(user.Id, user.Name, user.Email, user.Role.ToString(), organisationName, organisationSlug);
 
     // Property rather than a field so misconfiguration throws at call time with a clear message
     private string JwtSecret => _configuration["JWT_SECRET"]
