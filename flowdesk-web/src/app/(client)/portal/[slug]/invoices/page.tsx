@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInvoices, usePayInvoice } from "@/lib/queries";
 import { PayInvoiceDialog } from "@/components/invoices/PayInvoiceDialog";
@@ -56,6 +56,7 @@ function InvoiceRow({
 
 export default function PortalInvoicesPage() {
   const router = useRouter();
+  const { slug } = useParams<{ slug: string }>();
   const { user, loading } = useAuth();
   const { data: invoices = [], isLoading } = useInvoices();
   const payInvoice = usePayInvoice();
@@ -66,7 +67,10 @@ export default function PortalInvoicesPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-  }, [user, loading, router]);
+    else if (!loading && user && user.organisationSlug !== slug) {
+      router.push(`/portal/${user.organisationSlug}`);
+    }
+  }, [user, loading, router, slug]);
 
   async function handlePay(invoice: Invoice) {
     try {

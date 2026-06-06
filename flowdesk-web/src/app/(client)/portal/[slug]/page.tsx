@@ -55,7 +55,10 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-  }, [user, loading, router]);
+    else if (!loading && user && user.organisationSlug !== slug) {
+      router.push(`/portal/${user.organisationSlug}`);
+    }
+  }, [user, loading, router, slug]);
 
   if (loading || isLoading) {
     return (

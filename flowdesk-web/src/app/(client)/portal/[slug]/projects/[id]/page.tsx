@@ -196,7 +196,10 @@ export default function ProjectDetailPage({
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-  }, [user, loading, router]);
+    else if (!loading && user && user.organisationSlug !== slug) {
+      router.push(`/portal/${user.organisationSlug}`);
+    }
+  }, [user, loading, router, slug]);
 
   if (loading || projectLoading) {
     return <p className="text-sm text-muted-foreground animate-pulse py-8 text-center">Loading…</p>;
