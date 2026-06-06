@@ -135,6 +135,10 @@ public class InvoiceService : IInvoiceService
             throw new InvalidOperationException("The agency has not connected a Stripe account yet.");
 
         var total = invoice.Items.Sum(i => i.Quantity * i.UnitPrice);
+
+        // Known MVP limitation: if Stripe succeeds but the DB save below fails, a PaymentIntent
+        // exists in Stripe with no local record. The webhook will log a warning and skip it.
+        // Manual cleanup via Stripe Dashboard may be needed in that rare case.
         var (clientSecret, paymentIntentId) = await _stripe.CreatePaymentIntentAsync(total, org.StripeAccountId);
 
         invoice.StripePaymentIntentId = paymentIntentId;
@@ -152,6 +156,12 @@ public class InvoiceService : IInvoiceService
         if (invoice == null)
         {
             _logger.LogWarning("payment_intent.succeeded for unknown PaymentIntentId {Id}", paymentIntentId);
+            return;
+        }
+
+        if (invoice.Status == InvoiceStatus.Paid)
+        {
+            _logger.LogInformation("Webhook for already-paid invoice {InvoiceId} — skipping", invoice.Id);
             return;
         }
 
