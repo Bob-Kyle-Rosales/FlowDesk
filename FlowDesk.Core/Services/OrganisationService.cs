@@ -44,7 +44,8 @@ public class OrganisationService : IOrganisationService
         string fileName, string contentType)
     {
         var orgId = _currentUser.OrganisationId!.Value;
-        return await _fileStorage.GenerateUploadUrlAsync($"logos/{orgId}", fileName, contentType);
+        var uploadId = Guid.NewGuid().ToString("N")[..8];
+        return await _fileStorage.GenerateUploadUrlAsync($"logos/{orgId}/{uploadId}", fileName, contentType);
     }
 
     public async Task<OrganisationResponse> UpdateLogoAsync(UpdateLogoRequest request)
