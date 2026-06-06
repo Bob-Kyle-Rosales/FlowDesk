@@ -1,3 +1,4 @@
+using FlowDesk.Core.DTOs.Deliverables;
 using FlowDesk.Core.DTOs.Organisations;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -27,4 +28,25 @@ public class OrganisationsController : ControllerBase
     public async Task<ActionResult<OrganisationResponse>> UpdateMine(
         [FromBody] UpdateOrganisationRequest request)
         => Ok(await _service.UpdateMineAsync(request));
+
+    [Authorize(Policy = "AgencyOnly")]
+    [HttpPost("me/logo-upload-url")]
+    public async Task<ActionResult<UploadUrlResponse>> GetLogoUploadUrl(
+        [FromBody] GetLogoUploadUrlRequest request)
+    {
+        var (uploadUrl, fileUrl) = await _service.GetLogoUploadUrlAsync(
+            request.FileName, request.ContentType);
+        return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
+    }
+
+    [Authorize(Policy = "AgencyOwnerOnly")]
+    [HttpPatch("me/logo")]
+    public async Task<ActionResult<OrganisationResponse>> UpdateLogo(
+        [FromBody] UpdateLogoRequest request)
+        => Ok(await _service.UpdateLogoAsync(request));
+
+    [AllowAnonymous]
+    [HttpGet("public/{slug}")]
+    public async Task<ActionResult<PublicOrganisationResponse>> GetPublic(string slug)
+        => Ok(await _service.GetPublicAsync(slug));
 }
