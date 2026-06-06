@@ -7,7 +7,7 @@ import type {
   OrganisationResponse, UpdateOrganisationRequest,
   UserSummary, CreateProjectRequest,
   Message,
-  Invoice, InvoiceItemRequest, CreateInvoiceRequest, UpdateInvoiceRequest,
+  Invoice, InvoiceItemRequest, CreateInvoiceRequest, UpdateInvoiceRequest, PayInvoiceResponse,
 } from "@/types";
 
 // ── Projects ──────────────────────────────────────────────────────────────────
@@ -232,6 +232,25 @@ export function useDeleteInvoice() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/api/invoices/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+  });
+}
+
+export function useSendInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.post<Invoice>(`/api/invoices/${id}/send`).then(r => r.data),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", id] });
+    },
+  });
+}
+
+export function usePayInvoice() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.post<PayInvoiceResponse>(`/api/invoices/${id}/pay`).then(r => r.data),
   });
 }
 

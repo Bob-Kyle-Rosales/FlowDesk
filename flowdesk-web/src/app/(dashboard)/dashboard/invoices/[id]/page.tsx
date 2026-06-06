@@ -3,13 +3,13 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useInvoice, useDeleteInvoice } from "@/lib/queries";
+import { useInvoice, useDeleteInvoice, useSendInvoice } from "@/lib/queries";
 import { UpdateInvoiceDialog } from "@/components/invoices/UpdateInvoiceDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Send } from "lucide-react";
 
 const statusColor: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -23,6 +23,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const { data: invoice, isLoading, isError } = useInvoice(id);
   const deleteInvoice = useDeleteInvoice();
+  const sendInvoice = useSendInvoice();
   const [editOpen, setEditOpen] = useState(false);
 
   async function handleDelete() {
@@ -56,6 +57,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const isDraft = invoice.status === "Draft";
+  const isSent = invoice.status === "Sent";
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
@@ -81,6 +83,23 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </Badge>
           {isDraft && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={async () => {
+                  try {
+                    await sendInvoice.mutateAsync(invoice.id);
+                    toast.success("Invoice sent to client");
+                  } catch {
+                    toast.error("Failed to send invoice");
+                  }
+                }}
+                disabled={sendInvoice.isPending}
+              >
+                <Send className="size-3.5" />
+                {sendInvoice.isPending ? "Sending…" : "Send to Client"}
+              </Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditOpen(true)}>
                 <Pencil className="size-3.5" /> Edit
               </Button>

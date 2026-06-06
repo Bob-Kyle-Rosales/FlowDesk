@@ -149,6 +149,7 @@ export interface Invoice {
   dueDate: string | null;
   paidAt: string | null;
   createdAt: string;
+  stripePaymentIntentId: string | null;
   items: InvoiceItem[];
 }
 
@@ -172,6 +173,10 @@ export interface UpdateInvoiceRequest {
   projectId?: string | null;
   dueDate?: string | null;
   items: InvoiceItemRequest[];
+}
+
+export interface PayInvoiceResponse {
+  clientSecret: string;
 }
 
 // ── Errors ────────────────────────────────────────────────────────────────────
