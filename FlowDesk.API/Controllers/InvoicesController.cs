@@ -61,6 +61,7 @@ public class InvoicesController : ControllerBase
         => Ok(await _service.SendAsync(id));
 
     [HttpPost("{id:guid}/pay")]
+    [Authorize(Policy = "ClientOnly")]
     public async Task<ActionResult<PayInvoiceResponse>> Pay(Guid id)
         => Ok(await _service.PayAsync(id));
 
@@ -68,7 +69,9 @@ public class InvoicesController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Webhook()
     {
+        Request.EnableBuffering();
         var payload = await new StreamReader(Request.Body).ReadToEndAsync();
+        Request.Body.Position = 0;
         var signature = Request.Headers["Stripe-Signature"].ToString();
 
         if (!_stripe.TryConstructWebhookEvent(payload, signature, out var rawEvent))
@@ -79,10 +82,17 @@ public class InvoicesController : ControllerBase
 
         var stripeEvent = (Event)rawEvent!;
 
-        if (stripeEvent.Type == "payment_intent.succeeded")
+        if (stripeEvent.Type == "payment_intent.succeeded" &&
+            stripeEvent.Data.Object is PaymentIntent intent)
         {
-            var intent = (PaymentIntent)stripeEvent.Data.Object;
-            await _service.HandlePaymentSucceededAsync(intent.Id);
+            try
+            {
+                await _service.HandlePaymentSucceededAsync(intent.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to handle payment_intent.succeeded for {IntentId}", intent.Id);
+            }
         }
 
         return Ok();
