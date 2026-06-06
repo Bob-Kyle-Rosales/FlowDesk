@@ -3,13 +3,15 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useInvoice, useDeleteInvoice, useSendInvoice } from "@/lib/queries";
+import { useInvoice, useDeleteInvoice, useSendInvoice, usePayInvoice } from "@/lib/queries";
 import { UpdateInvoiceDialog } from "@/components/invoices/UpdateInvoiceDialog";
+import { PayInvoiceDialog } from "@/components/invoices/PayInvoiceDialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2, Send } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Send, CreditCard } from "lucide-react";
 
 const statusColor: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -24,7 +26,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const { data: invoice, isLoading, isError } = useInvoice(id);
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
+  const payInvoice = usePayInvoice();
+  const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   async function handleDelete() {
     if (!confirm("Delete this invoice? This cannot be undone.")) return;
@@ -58,6 +64,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   const isDraft = invoice.status === "Draft";
   const isSent = invoice.status === "Sent";
+  const isClient = user?.role === "Client";
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
@@ -113,6 +120,25 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 <Trash2 className="size-3.5" /> {deleteInvoice.isPending ? "Deleting…" : "Delete"}
               </Button>
             </>
+          )}
+          {isSent && isClient && (
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={async () => {
+                try {
+                  const { clientSecret: cs } = await payInvoice.mutateAsync(invoice.id);
+                  setClientSecret(cs);
+                  setPayOpen(true);
+                } catch {
+                  toast.error("Failed to initialise payment");
+                }
+              }}
+              disabled={payInvoice.isPending}
+            >
+              <CreditCard className="size-3.5" />
+              {payInvoice.isPending ? "Loading…" : "Pay Now"}
+            </Button>
           )}
         </div>
       </div>
@@ -191,6 +217,18 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           invoice={invoice}
           open={editOpen}
           onOpenChange={setEditOpen}
+        />
+      )}
+      {clientSecret && (
+        <PayInvoiceDialog
+          invoiceId={id}
+          clientSecret={clientSecret}
+          total={invoice.total}
+          open={payOpen}
+          onOpenChange={open => {
+            setPayOpen(open);
+            if (!open) setClientSecret(null);
+          }}
         />
       )}
     </div>
