@@ -13,6 +13,7 @@ public class Organisation
     // Branding fields — applied to the white-labeled client portal (Phase 5)
     public string? PrimaryColor { get; set; }
     public string? CustomDomain { get; set; }
+    public string? LogoUrl { get; set; }
     public string Plan { get; set; } = "starter";
     public string? StripeAccountId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -6,6 +6,7 @@ public record OrganisationResponse(
     string Name,
     string Slug,
     string? PrimaryColor,
+    string? LogoUrl,
     string Plan,
     DateTime CreatedAt,
     string? StripeAccountId);
