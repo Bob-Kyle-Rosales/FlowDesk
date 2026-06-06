@@ -164,11 +164,10 @@ public class AIReportService : IAIReportService
             using (doc)
             {
                 if (!doc.RootElement.TryGetProperty("candidates", out var candidates)) continue;
-                var text = candidates[0]
-                    .GetProperty("content")
-                    .GetProperty("parts")[0]
-                    .GetProperty("text")
-                    .GetString();
+                if (candidates.GetArrayLength() == 0) continue;
+                if (!candidates[0].GetProperty("content").TryGetProperty("parts", out var parts)) continue;
+                if (parts.GetArrayLength() == 0) continue;
+                var text = parts[0].GetProperty("text").GetString();
                 if (!string.IsNullOrEmpty(text))
                     yield return text;
             }
