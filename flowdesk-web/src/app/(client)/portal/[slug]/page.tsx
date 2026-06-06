@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import type { PublicOrganisationResponse } from "@/types";
 
 export default async function ClientPortalPage({
@@ -25,9 +26,12 @@ export default async function ClientPortalPage({
       {/* Brand header */}
       <header style={{ backgroundColor: brandColor }} className="px-6 py-4 flex items-center gap-3">
         {org.logoUrl ? (
-          <img
+          <Image
             src={org.logoUrl}
             alt={`${org.name} logo`}
+            width={36}
+            height={36}
+            unoptimized
             className="size-9 rounded-lg object-cover bg-white/20"
           />
         ) : (
