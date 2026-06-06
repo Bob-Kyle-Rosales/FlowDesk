@@ -63,6 +63,16 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
+    /// Persists a new user into an existing organisation (invite acceptance).
+    /// Unlike CreateWithOrganisationAsync, no new Organisation is created.
+    /// </summary>
+    public async Task CreateAsync(User user)
+    {
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
     /// Persists a new refresh token after issuing tokens. Each login/refresh creates a new record.
     /// Old tokens are revoked rather than deleted so there is an audit trail.
     /// </summary>

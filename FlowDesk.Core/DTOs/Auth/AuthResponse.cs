@@ -1,7 +1,7 @@
 namespace FlowDesk.Core.DTOs.Auth;
 
 /// <summary>
-/// Returned in the response body after login, register, or refresh.
+/// Returned in the response body after login, register, refresh, or invite acceptance.
 /// Tokens are NOT included here — they are written to httpOnly cookies by the controller.
 /// </summary>
 public record AuthResponse(
@@ -9,5 +9,6 @@ public record AuthResponse(
     string Name,
     string Email,
     string Role,
-    string OrganisationName
+    string OrganisationName,
+    string OrganisationSlug
 );
