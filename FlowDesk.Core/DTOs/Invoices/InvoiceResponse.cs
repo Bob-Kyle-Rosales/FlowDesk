@@ -14,4 +14,5 @@ public record InvoiceResponse(
     string ClientName,
     Guid? ProjectId,
     string? ProjectName,
+    string? StripePaymentIntentId,
     List<InvoiceItemResponse> Items);

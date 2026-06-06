@@ -186,6 +186,7 @@ public class InvoiceService : IInvoiceService
         inv.Client?.Name ?? string.Empty,
         inv.ProjectId,
         inv.Project?.Name,
+        inv.StripePaymentIntentId,
         inv.Items.Select(i => new InvoiceItemResponse(
             i.Id,
             i.Description,
