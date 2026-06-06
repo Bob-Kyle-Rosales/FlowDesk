@@ -2,6 +2,7 @@ using FlowDesk.Core.DTOs.Invoices;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 
 namespace FlowDesk.API.Controllers;
 
@@ -11,8 +12,18 @@ namespace FlowDesk.API.Controllers;
 public class InvoicesController : ControllerBase
 {
     private readonly IInvoiceService _service;
+    private readonly IStripeService _stripe;
+    private readonly ILogger<InvoicesController> _logger;
 
-    public InvoicesController(IInvoiceService service) => _service = service;
+    public InvoicesController(
+        IInvoiceService service,
+        IStripeService stripe,
+        ILogger<InvoicesController> logger)
+    {
+        _service = service;
+        _stripe = stripe;
+        _logger = logger;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<InvoiceResponse>>> GetAll()
@@ -42,5 +53,38 @@ public class InvoicesController : ControllerBase
     {
         await _service.DeleteAsync(id);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/send")]
+    [Authorize(Policy = "AgencyOnly")]
+    public async Task<ActionResult<InvoiceResponse>> Send(Guid id)
+        => Ok(await _service.SendAsync(id));
+
+    [HttpPost("{id:guid}/pay")]
+    public async Task<ActionResult<PayInvoiceResponse>> Pay(Guid id)
+        => Ok(await _service.PayAsync(id));
+
+    [HttpPost("webhook")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Webhook()
+    {
+        var payload = await new StreamReader(Request.Body).ReadToEndAsync();
+        var signature = Request.Headers["Stripe-Signature"].ToString();
+
+        if (!_stripe.TryConstructWebhookEvent(payload, signature, out var rawEvent))
+        {
+            _logger.LogWarning("Stripe webhook received with invalid signature");
+            return BadRequest("Invalid signature.");
+        }
+
+        var stripeEvent = (Event)rawEvent!;
+
+        if (stripeEvent.Type == "payment_intent.succeeded")
+        {
+            var intent = (PaymentIntent)stripeEvent.Data.Object;
+            await _service.HandlePaymentSucceededAsync(intent.Id);
+        }
+
+        return Ok();
     }
 }
