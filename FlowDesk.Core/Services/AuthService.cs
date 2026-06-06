@@ -6,6 +6,7 @@ using FlowDesk.Core.DTOs.Auth;
 using FlowDesk.Core.Entities;
 using FlowDesk.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FlowDesk.Core.Services;
@@ -14,11 +15,19 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _email;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(
+        IUserRepository userRepository,
+        IConfiguration configuration,
+        IEmailService email,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _email = email;
+        _logger = logger;
     }
 
     /// <summary>
@@ -100,11 +109,12 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
-    /// Returns a signed JWT invite link. The token is self-verifying — no DB record needed.
+    /// Returns a signed JWT invite link and sends the invite email via SendGrid.
+    /// The token is self-verifying — no DB record needed.
     /// The frontend reads the claims to pre-fill the registration form.
-    /// Email delivery is wired in Phase 4 (SendGrid).
+    /// Email send failures are logged but do not block the response.
     /// </summary>
-    public Task<string> InviteAsync(InviteRequest request, Guid organisationId)
+    public async Task<string> InviteAsync(InviteRequest request, Guid organisationId)
     {
         var claims = new[]
         {
@@ -124,7 +134,33 @@ public class AuthService : IAuthService
 
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var frontendUrl = _configuration["FRONTEND_URL"] ?? "http://localhost:3000";
-        return Task.FromResult($"{frontendUrl}/invite?token={jwt}");
+        var inviteLink = $"{frontendUrl}/invite?token={jwt}";
+
+        var html = $"""
+            <p>Hi {request.Name},</p>
+            <p>You have been invited to join a workspace on <strong>FlowDesk</strong>.</p>
+            <p>Click the button below to accept your invitation. The link expires in 7&nbsp;days.</p>
+            <p style="margin:24px 0">
+              <a href="{inviteLink}"
+                 style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
+                Accept Invitation
+              </a>
+            </p>
+            <p style="font-size:12px;color:#6b7280">
+              If you were not expecting this invitation, you can ignore this email.
+            </p>
+            """;
+
+        try
+        {
+            await _email.SendAsync(request.Email, request.Name, "You're invited to FlowDesk", html);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send invite email to {Email}", request.Email);
+        }
+
+        return inviteLink;
     }
 
     private async Task<TokenPair> IssueTokensAsync(User user)
