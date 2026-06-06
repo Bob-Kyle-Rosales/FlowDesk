@@ -11,10 +11,12 @@ namespace FlowDesk.API.Controllers;
 public class ProjectsController : ControllerBase
 {
     private readonly IProjectService _service;
+    private readonly IAIReportService _reportService;
 
-    public ProjectsController(IProjectService service)
+    public ProjectsController(IProjectService service, IAIReportService reportService)
     {
         _service = service;
+        _reportService = reportService;
     }
 
     [HttpGet]
@@ -50,4 +52,20 @@ public class ProjectsController : ControllerBase
     [HttpGet("{id:guid}/stats")]
     public async Task<ActionResult<ProjectStatsResponse>> GetStats(Guid id)
         => Ok(await _service.GetStatsAsync(id));
+
+    [HttpPost("{id:guid}/report")]
+    [Authorize(Policy = "AgencyOnly")]
+    public async Task StreamReport(Guid id, CancellationToken ct)
+    {
+        Response.ContentType = "text/event-stream";
+        Response.Headers["Cache-Control"] = "no-cache";
+        Response.Headers["X-Accel-Buffering"] = "no";
+
+        await foreach (var token in _reportService.StreamReportAsync(id, ct))
+        {
+            if (ct.IsCancellationRequested) break;
+            await Response.WriteAsync($"data: {token}\n\n", ct);
+            await Response.Body.FlushAsync(ct);
+        }
+    }
 }
