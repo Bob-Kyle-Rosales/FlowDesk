@@ -9,4 +9,7 @@ public interface IInvoiceService
     Task<InvoiceResponse> CreateAsync(CreateInvoiceRequest request);
     Task<InvoiceResponse> UpdateAsync(Guid id, UpdateInvoiceRequest request);
     Task DeleteAsync(Guid id);
+    Task<InvoiceResponse> SendAsync(Guid id);
+    Task<PayInvoiceResponse> PayAsync(Guid id);
+    Task HandlePaymentSucceededAsync(string paymentIntentId);
 }

@@ -32,6 +32,12 @@ public class InvoiceRepository : IInvoiceRepository
             .Include(i => i.Items)
             .FirstOrDefaultAsync(i => i.Id == id);
 
+    public async Task<Invoice?> GetByPaymentIntentIdAsync(string paymentIntentId)
+        => await _context.Invoices
+            .IgnoreQueryFilters()
+            .Include(i => i.Items)
+            .FirstOrDefaultAsync(i => i.StripePaymentIntentId == paymentIntentId);
+
     public async Task<Invoice> CreateAsync(Invoice invoice)
     {
         await _context.Invoices.AddAsync(invoice);

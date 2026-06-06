@@ -9,15 +9,21 @@ namespace FlowDesk.Core.Services;
 public class InvoiceService : IInvoiceService
 {
     private readonly IInvoiceRepository _repo;
+    private readonly IOrganisationRepository _orgRepo;
+    private readonly IStripeService _stripe;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<InvoiceService> _logger;
 
     public InvoiceService(
         IInvoiceRepository repo,
+        IOrganisationRepository orgRepo,
+        IStripeService stripe,
         ICurrentUserService currentUser,
         ILogger<InvoiceService> logger)
     {
         _repo = repo;
+        _orgRepo = orgRepo;
+        _stripe = stripe;
         _currentUser = currentUser;
         _logger = logger;
     }
@@ -95,6 +101,64 @@ public class InvoiceService : IInvoiceService
             throw new InvalidOperationException("Only Draft invoices can be deleted.");
         await _repo.DeleteAsync(invoice);
         _logger.LogInformation("Invoice {InvoiceId} deleted", id);
+    }
+
+    public async Task<InvoiceResponse> SendAsync(Guid id)
+    {
+        var invoice = await GetOrThrowAsync(id);
+        if (invoice.Status != InvoiceStatus.Draft)
+            throw new InvalidOperationException("Only Draft invoices can be sent.");
+
+        invoice.Status = InvoiceStatus.Sent;
+        await _repo.UpdateAsync(invoice);
+        _logger.LogInformation("Invoice {InvoiceId} sent", id);
+
+        var updated = await _repo.GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Failed to load sent invoice.");
+        return ToResponse(updated);
+    }
+
+    public async Task<PayInvoiceResponse> PayAsync(Guid id)
+    {
+        var invoice = await GetOrThrowAsync(id);
+
+        if (_currentUser.Role == UserRole.Client.ToString() && invoice.ClientId != _currentUser.UserId)
+            throw new UnauthorizedAccessException("Access denied.");
+
+        if (invoice.Status != InvoiceStatus.Sent)
+            throw new InvalidOperationException("Only Sent invoices can be paid.");
+
+        var org = await _orgRepo.GetByIdAsync(invoice.OrganisationId)
+            ?? throw new KeyNotFoundException("Organisation not found.");
+
+        if (string.IsNullOrEmpty(org.StripeAccountId))
+            throw new InvalidOperationException("The agency has not connected a Stripe account yet.");
+
+        var total = invoice.Items.Sum(i => i.Quantity * i.UnitPrice);
+        var (clientSecret, paymentIntentId) = await _stripe.CreatePaymentIntentAsync(total, org.StripeAccountId);
+
+        invoice.StripePaymentIntentId = paymentIntentId;
+        await _repo.UpdateAsync(invoice);
+
+        _logger.LogInformation("PaymentIntent {PaymentIntentId} created for invoice {InvoiceId}",
+            paymentIntentId, id);
+
+        return new PayInvoiceResponse(clientSecret);
+    }
+
+    public async Task HandlePaymentSucceededAsync(string paymentIntentId)
+    {
+        var invoice = await _repo.GetByPaymentIntentIdAsync(paymentIntentId);
+        if (invoice == null)
+        {
+            _logger.LogWarning("payment_intent.succeeded for unknown PaymentIntentId {Id}", paymentIntentId);
+            return;
+        }
+
+        invoice.Status = InvoiceStatus.Paid;
+        invoice.PaidAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(invoice);
+        _logger.LogInformation("Invoice {InvoiceId} marked Paid via webhook", invoice.Id);
     }
 
     private async Task<Invoice> GetOrThrowAsync(Guid id)
