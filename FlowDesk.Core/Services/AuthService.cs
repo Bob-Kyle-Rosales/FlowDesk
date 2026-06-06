@@ -136,8 +136,9 @@ public class AuthService : IAuthService
         var frontendUrl = _configuration["FRONTEND_URL"] ?? "http://localhost:3000";
         var inviteLink = $"{frontendUrl}/invite?token={jwt}";
 
+        var safeName = System.Net.WebUtility.HtmlEncode(request.Name);
         var html = $"""
-            <p>Hi {request.Name},</p>
+            <p>Hi {safeName},</p>
             <p>You have been invited to join a workspace on <strong>FlowDesk</strong>.</p>
             <p>Click the button below to accept your invitation. The link expires in 7&nbsp;days.</p>
             <p style="margin:24px 0">
