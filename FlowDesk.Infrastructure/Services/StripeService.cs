@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using FlowDesk.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Stripe;
 
 namespace FlowDesk.Infrastructure.Services;
@@ -10,11 +11,16 @@ public class StripeService : IStripeService
 {
     private readonly IConfiguration _config;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<StripeService> _logger;
 
-    public StripeService(IConfiguration config, IHttpClientFactory httpClientFactory)
+    public StripeService(
+        IConfiguration config,
+        IHttpClientFactory httpClientFactory,
+        ILogger<StripeService> logger)
     {
         _config = config;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public string BuildConnectUrl(Guid organisationId, string callbackUri)
@@ -66,7 +72,7 @@ public class StripeService : IStripeService
     public async Task<(string ClientSecret, string PaymentIntentId)> CreatePaymentIntentAsync(
         decimal total, string destinationAccountId)
     {
-        StripeConfiguration.ApiKey = _config["STRIPE_SECRET_KEY"]
+        var apiKey = _config["STRIPE_SECRET_KEY"]
             ?? throw new InvalidOperationException("STRIPE_SECRET_KEY is not set.");
 
         var amountInCents = (long)Math.Round(total * 100, MidpointRounding.AwayFromZero);
@@ -85,14 +91,15 @@ public class StripeService : IStripeService
             },
         };
 
+        var requestOptions = new RequestOptions { ApiKey = apiKey };
         var service = new PaymentIntentService();
-        var intent = await service.CreateAsync(options);
+        var intent = await service.CreateAsync(options, requestOptions);
 
         return (intent.ClientSecret!, intent.Id);
     }
 
     public bool TryConstructWebhookEvent(
-        string payload, string signature, out object stripeEvent)
+        string payload, string signature, out object? stripeEvent)
     {
         var secret = _config["STRIPE_WEBHOOK_SECRET"]
             ?? throw new InvalidOperationException("STRIPE_WEBHOOK_SECRET is not set.");
@@ -102,9 +109,10 @@ public class StripeService : IStripeService
             stripeEvent = EventUtility.ConstructEvent(payload, signature, secret);
             return true;
         }
-        catch (StripeException)
+        catch (Exception ex)
         {
-            stripeEvent = null!;
+            _logger.LogWarning(ex, "Stripe webhook signature verification failed");
+            stripeEvent = null;
             return false;
         }
     }

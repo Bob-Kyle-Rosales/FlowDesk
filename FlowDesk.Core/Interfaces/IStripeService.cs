@@ -8,5 +8,5 @@ public interface IStripeService
     Task<(string ClientSecret, string PaymentIntentId)> CreatePaymentIntentAsync(
         decimal total, string destinationAccountId);
     bool TryConstructWebhookEvent(
-        string payload, string signature, out object stripeEvent);
+        string payload, string signature, out object? stripeEvent);
 }
