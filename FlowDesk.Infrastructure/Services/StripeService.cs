@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using FlowDesk.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Stripe;
 
 namespace FlowDesk.Infrastructure.Services;
 
@@ -60,6 +61,52 @@ public class StripeService : IStripeService
 
         return token.StripeUserId
             ?? throw new InvalidOperationException("Stripe did not return a StripeUserId.");
+    }
+
+    public async Task<(string ClientSecret, string PaymentIntentId)> CreatePaymentIntentAsync(
+        decimal total, string destinationAccountId)
+    {
+        StripeConfiguration.ApiKey = _config["STRIPE_SECRET_KEY"]
+            ?? throw new InvalidOperationException("STRIPE_SECRET_KEY is not set.");
+
+        var amountInCents = (long)Math.Round(total * 100, MidpointRounding.AwayFromZero);
+
+        var options = new PaymentIntentCreateOptions
+        {
+            Amount = amountInCents,
+            Currency = "usd",
+            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+            {
+                Enabled = true,
+            },
+            TransferData = new PaymentIntentTransferDataOptions
+            {
+                Destination = destinationAccountId,
+            },
+        };
+
+        var service = new PaymentIntentService();
+        var intent = await service.CreateAsync(options);
+
+        return (intent.ClientSecret!, intent.Id);
+    }
+
+    public bool TryConstructWebhookEvent(
+        string payload, string signature, out object stripeEvent)
+    {
+        var secret = _config["STRIPE_WEBHOOK_SECRET"]
+            ?? throw new InvalidOperationException("STRIPE_WEBHOOK_SECRET is not set.");
+
+        try
+        {
+            stripeEvent = EventUtility.ConstructEvent(payload, signature, secret);
+            return true;
+        }
+        catch (StripeException)
+        {
+            stripeEvent = null!;
+            return false;
+        }
     }
 
     private record StripeOAuthTokenResponse(
