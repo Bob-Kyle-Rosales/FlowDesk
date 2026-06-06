@@ -1,3 +1,4 @@
+using System.Net;
 using FlowDesk.Core.DTOs.Invoices;
 using FlowDesk.Core.Entities;
 using FlowDesk.Core.Enums;
@@ -11,6 +12,7 @@ public class InvoiceService : IInvoiceService
     private readonly IInvoiceRepository _repo;
     private readonly IOrganisationRepository _orgRepo;
     private readonly IStripeService _stripe;
+    private readonly IEmailService _email;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<InvoiceService> _logger;
 
@@ -18,12 +20,14 @@ public class InvoiceService : IInvoiceService
         IInvoiceRepository repo,
         IOrganisationRepository orgRepo,
         IStripeService stripe,
+        IEmailService email,
         ICurrentUserService currentUser,
         ILogger<InvoiceService> logger)
     {
         _repo = repo;
         _orgRepo = orgRepo;
         _stripe = stripe;
+        _email = email;
         _currentUser = currentUser;
         _logger = logger;
     }
@@ -109,12 +113,49 @@ public class InvoiceService : IInvoiceService
         if (invoice.Status != InvoiceStatus.Draft)
             throw new InvalidOperationException("Only Draft invoices can be sent.");
 
+        var org = await _orgRepo.GetByIdAsync(invoice.OrganisationId)
+            ?? throw new KeyNotFoundException("Organisation not found.");
+
         invoice.Status = InvoiceStatus.Sent;
         await _repo.UpdateAsync(invoice);
         _logger.LogInformation("Invoice {InvoiceId} sent", id);
 
         var updated = await _repo.GetByIdAsync(id)
             ?? throw new InvalidOperationException("Failed to load sent invoice.");
+
+        var total = updated.Items.Sum(i => i.Quantity * i.UnitPrice);
+        var dueDateText = updated.DueDate.HasValue
+            ? updated.DueDate.Value.ToString("MMMM d, yyyy")
+            : "No due date";
+
+        var clientName = WebUtility.HtmlEncode(updated.Client?.Name ?? "there");
+        var orgName = WebUtility.HtmlEncode(org.Name);
+        var invoiceTitle = WebUtility.HtmlEncode(updated.Title);
+
+        var html = $"""
+            <p>Hi {clientName},</p>
+            <p><strong>{orgName}</strong> has sent you an invoice.</p>
+            <table style="border-collapse:collapse;margin:16px 0">
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Invoice</td><td><strong>{invoiceTitle}</strong></td></tr>
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Amount due</td><td><strong>${total:F2}</strong></td></tr>
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Due date</td><td>{dueDateText}</td></tr>
+            </table>
+            <p>Log in to your FlowDesk portal to review and pay this invoice.</p>
+            """;
+
+        try
+        {
+            await _email.SendAsync(
+                updated.Client!.Email,
+                updated.Client.Name,
+                $"New invoice from {org.Name}",
+                html);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send invoice email to client {ClientId}", updated.ClientId);
+        }
+
         return ToResponse(updated);
     }
 
