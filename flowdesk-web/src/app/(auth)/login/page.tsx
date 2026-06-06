@@ -26,8 +26,12 @@ export default function LoginPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      await login(data.email, data.password);
-      router.push("/dashboard");
+      const user = await login(data.email, data.password);
+      if (user.role === "Client") {
+        router.push(`/portal/${user.organisationSlug}`);
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       toast.error("Invalid email or password");
     }

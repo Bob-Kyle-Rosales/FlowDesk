@@ -5,6 +5,7 @@ export interface AuthResponse {
   email: string;
   role: "AgencyOwner" | "AgencyMember" | "Client";
   organisationName: string;
+  organisationSlug: string;
 }
 
 export interface RegisterRequest {
