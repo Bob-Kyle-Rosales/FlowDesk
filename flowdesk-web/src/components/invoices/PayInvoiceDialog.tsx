@@ -18,12 +18,11 @@ const stripePromise = loadStripe(
 );
 
 interface PaymentFormProps {
-  invoiceId: string;
   onSuccess: () => void;
   onClose: () => void;
 }
 
-function PaymentForm({ invoiceId, onSuccess, onClose }: PaymentFormProps) {
+function PaymentForm({ onSuccess, onClose }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [paying, setPaying] = useState(false);
@@ -101,7 +100,6 @@ export function PayInvoiceDialog({
         {open && clientSecret && (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
             <PaymentForm
-              invoiceId={invoiceId}
               onSuccess={handleSuccess}
               onClose={() => onOpenChange(false)}
             />

@@ -130,8 +130,14 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   const { clientSecret: cs } = await payInvoice.mutateAsync(invoice.id);
                   setClientSecret(cs);
                   setPayOpen(true);
-                } catch {
-                  toast.error("Failed to initialise payment");
+                } catch (err: unknown) {
+                  const detail =
+                    (err as { response?: { data?: { detail?: string; title?: string } } })
+                      ?.response?.data?.detail ??
+                    (err as { response?: { data?: { title?: string } } })
+                      ?.response?.data?.title ??
+                    "Failed to initialise payment";
+                  toast.error(detail);
                 }
               }}
               disabled={payInvoice.isPending}
