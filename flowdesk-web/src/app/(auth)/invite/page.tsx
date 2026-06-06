@@ -68,8 +68,9 @@ function InviteForm() {
       });
       setUser(res.data);
       router.push(`/portal/${res.data.organisationSlug}`);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.detail ?? "Failed to accept invitation");
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast.error(detail ?? "Failed to accept invitation");
     }
   }
 
