@@ -27,6 +27,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     setIsGenerating(true);
     setReportText("");
 
+    let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5269";
       const response = await fetch(`${apiUrl}/api/projects/${id}/report`, {
@@ -37,7 +39,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       if (!response.body) throw new Error("No response body");
 
-      const reader = response.body.getReader();
+      reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
@@ -60,6 +62,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       console.error("Report generation failed", err);
       setReportText((prev) => prev + "\n\n[Generation failed. Please try again.]");
     } finally {
+      reader?.cancel();
       setIsGenerating(false);
     }
   }
