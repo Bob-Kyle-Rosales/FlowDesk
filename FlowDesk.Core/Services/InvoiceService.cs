@@ -143,17 +143,24 @@ public class InvoiceService : IInvoiceService
             <p>Log in to your FlowDesk portal to review and pay this invoice.</p>
             """;
 
-        try
+        if (updated.Client is not null)
         {
-            await _email.SendAsync(
-                updated.Client!.Email,
-                updated.Client.Name,
-                $"New invoice from {org.Name}",
-                html);
+            try
+            {
+                await _email.SendAsync(
+                    updated.Client.Email,
+                    updated.Client.Name,
+                    $"New invoice from {org.Name}",
+                    html);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send invoice email to client {ClientId}", updated.ClientId);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Failed to send invoice email to client {ClientId}", updated.ClientId);
+            _logger.LogWarning("Invoice {InvoiceId} has no loaded Client nav property — email skipped", id);
         }
 
         return ToResponse(updated);
