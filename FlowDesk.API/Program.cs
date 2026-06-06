@@ -45,6 +45,7 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IStripeService, StripeService>();
+builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
 
 // ── SignalR ────────────────────────────────────────────────────────────────────
 builder.Services.AddSignalR();
