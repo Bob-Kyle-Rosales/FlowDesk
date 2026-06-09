@@ -76,14 +76,17 @@ export function MessagesTab({ projectId }: { projectId: string }) {
         };
         xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
         xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.onabort = () => reject(new Error("aborted"));
         xhr.open("PUT", uploadUrl);
         xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
         xhr.send(file);
       });
 
       setPendingFileUrl(fileUrl);
-    } catch {
-      toast.error("File upload failed");
+    } catch (err) {
+      if ((err as Error).message !== "aborted") {
+        toast.error("File upload failed");
+      }
       setPendingFile(null);
       setPendingFileUrl(null);
     } finally {
@@ -98,6 +101,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     setPendingFile(null);
     setPendingFileUrl(null);
     setUploadProgress(0);
+    setIsUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
