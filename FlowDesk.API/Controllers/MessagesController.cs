@@ -16,17 +16,20 @@ public class MessagesController : ControllerBase
     private readonly IMessageService _service;
     private readonly IHubContext<ChatHub> _hub;
     private readonly IFileStorageService _fileStorage;
+    private readonly IProjectService _projectService;
     private readonly ILogger<MessagesController> _logger;
 
     public MessagesController(
         IMessageService service,
         IHubContext<ChatHub> hub,
         IFileStorageService fileStorage,
+        IProjectService projectService,
         ILogger<MessagesController> logger)
     {
         _service = service;
         _hub = hub;
         _fileStorage = fileStorage;
+        _projectService = projectService;
         _logger = logger;
     }
 
@@ -55,6 +58,9 @@ public class MessagesController : ControllerBase
     public async Task<ActionResult<UploadUrlResponse>> GetUploadUrl(
         Guid projectId, [FromBody] GetMessageUploadUrlRequest request)
     {
+        var project = await _projectService.GetByIdAsync(projectId);
+        if (project is null) return NotFound();
+
         var (uploadUrl, fileUrl) = await _fileStorage.GenerateUploadUrlAsync(
             $"messages/{projectId}/{Guid.NewGuid()}", request.FileName, request.ContentType);
         return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
