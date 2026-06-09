@@ -66,7 +66,8 @@ public class ProjectsController : ControllerBase
             await foreach (var token in _reportService.StreamReportAsync(id, ct))
             {
                 if (ct.IsCancellationRequested) break;
-                await Response.WriteAsync($"data: {token}\n\n", ct);
+                var escapedToken = token.Replace("\n", "\ndata: ");
+                await Response.WriteAsync($"data: {escapedToken}\n\n", ct);
                 await Response.Body.FlushAsync(ct);
             }
         }
