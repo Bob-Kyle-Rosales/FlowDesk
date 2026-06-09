@@ -98,7 +98,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       console.error("Report generation failed", err);
       setReportText((prev) => prev + "\n\n[Generation failed. Please try again.]");
     } finally {
-      reader?.cancel();
+      await reader?.cancel();
       setIsGenerating(false);
     }
   }
