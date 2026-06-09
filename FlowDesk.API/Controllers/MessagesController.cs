@@ -56,7 +56,7 @@ public class MessagesController : ControllerBase
         Guid projectId, [FromBody] GetMessageUploadUrlRequest request)
     {
         var (uploadUrl, fileUrl) = await _fileStorage.GenerateUploadUrlAsync(
-            $"messages/{projectId}", request.FileName, request.ContentType);
+            $"messages/{projectId}/{Guid.NewGuid()}", request.FileName, request.ContentType);
         return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
     }
 
