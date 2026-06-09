@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useProject, useProjectStats } from "@/lib/queries";
@@ -12,6 +12,7 @@ import { DeliverablesTab } from "@/components/projects/DeliverablesTab";
 import { MessagesTab } from "@/components/projects/MessagesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -23,6 +24,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [reportText, setReportText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   async function generateReport() {
     setIsGenerating(true);
     setReportText("");
@@ -30,16 +39,34 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 
     try {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5269";
-      const response = await fetch(`${apiUrl}/api/projects/${id}/report`, {
+      let res = await fetch(`${apiUrl}/api/projects/${id}/report`, {
         method: "POST",
         credentials: "include",
+        signal: controller.signal,
       });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      if (!response.body) throw new Error("No response body");
+      if (res.status === 401) {
+        try {
+          await api.post("/api/auth/refresh");
+        } catch {
+          setReportText("[Session expired. Please log in again.]");
+          return;
+        }
+        res = await fetch(`${apiUrl}/api/projects/${id}/report`, {
+          method: "POST",
+          credentials: "include",
+          signal: controller.signal,
+        });
+      }
 
-      reader = response.body.getReader();
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.body) throw new Error("No response body");
+
+      reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
@@ -59,6 +86,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         }
       }
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       console.error("Report generation failed", err);
       setReportText((prev) => prev + "\n\n[Generation failed. Please try again.]");
     } finally {
