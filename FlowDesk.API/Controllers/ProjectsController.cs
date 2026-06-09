@@ -61,11 +61,18 @@ public class ProjectsController : ControllerBase
         Response.Headers["Cache-Control"] = "no-cache";
         Response.Headers["X-Accel-Buffering"] = "no";
 
-        await foreach (var token in _reportService.StreamReportAsync(id, ct))
+        try
         {
-            if (ct.IsCancellationRequested) break;
-            await Response.WriteAsync($"data: {token}\n\n", ct);
-            await Response.Body.FlushAsync(ct);
+            await foreach (var token in _reportService.StreamReportAsync(id, ct))
+            {
+                if (ct.IsCancellationRequested) break;
+                await Response.WriteAsync($"data: {token}\n\n", ct);
+                await Response.Body.FlushAsync(ct);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Client disconnected — normal for SSE; not an error
         }
     }
 }
