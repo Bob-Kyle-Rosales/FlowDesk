@@ -44,7 +44,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddHttpClient();
-builder.Services.AddHttpClient<IAIReportService, AIReportService>();
+builder.Services.AddScoped<IAIReportService, AIReportService>();
 builder.Services.AddSingleton<IStripeService, StripeService>();
 builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
 

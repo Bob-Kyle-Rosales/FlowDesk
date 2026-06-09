@@ -14,7 +14,7 @@ public class AIReportService : IAIReportService
     private readonly IProjectRepository _projects;
     private readonly IMilestoneRepository _milestones;
     private readonly IDeliverableRepository _deliverables;
-    private readonly HttpClient _http;
+    private readonly IHttpClientFactory _httpFactory;
     private readonly IConfiguration _config;
     private readonly ILogger<AIReportService> _logger;
     private readonly string _provider;
@@ -23,14 +23,14 @@ public class AIReportService : IAIReportService
         IProjectRepository projects,
         IMilestoneRepository milestones,
         IDeliverableRepository deliverables,
-        HttpClient http,
+        IHttpClientFactory httpFactory,
         IConfiguration config,
         ILogger<AIReportService> logger)
     {
         _projects = projects;
         _milestones = milestones;
         _deliverables = deliverables;
-        _http = http;
+        _httpFactory = httpFactory;
         _config = config;
         _logger = logger;
         _provider = config["AI_PROVIDER"] ?? "ollama";
@@ -126,11 +126,12 @@ public class AIReportService : IAIReportService
             Content = JsonContent.Create(body)
         };
 
+        using var http = _httpFactory.CreateClient();
         HttpResponseMessage? response = null;
         string? geminiError = null;
         try
         {
-            response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
@@ -165,9 +166,10 @@ public class AIReportService : IAIReportService
             {
                 if (!doc.RootElement.TryGetProperty("candidates", out var candidates)) continue;
                 if (candidates.GetArrayLength() == 0) continue;
-                if (!candidates[0].GetProperty("content").TryGetProperty("parts", out var parts)) continue;
+                if (!candidates[0].TryGetProperty("content", out var content)) continue;
+                if (!content.TryGetProperty("parts", out var parts)) continue;
                 if (parts.GetArrayLength() == 0) continue;
-                var text = parts[0].GetProperty("text").GetString();
+                var text = parts[0].TryGetProperty("text", out var textProp) ? textProp.GetString() : null;
                 if (!string.IsNullOrEmpty(text))
                     yield return text;
             }
@@ -188,11 +190,12 @@ public class AIReportService : IAIReportService
             Content = JsonContent.Create(body)
         };
 
+        using var http = _httpFactory.CreateClient();
         HttpResponseMessage? response = null;
         string? ollamaError = null;
         try
         {
-            response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
