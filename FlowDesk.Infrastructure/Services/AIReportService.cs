@@ -146,33 +146,40 @@ public class AIReportService : IAIReportService
             yield break;
         }
 
-        using var stream = await response!.Content.ReadAsStreamAsync(ct);
-        using var reader = new StreamReader(stream);
-
-        while (!reader.EndOfStream && !ct.IsCancellationRequested)
+        try
         {
-            var line = await reader.ReadLineAsync(ct);
-            if (line is null) break;
-            if (!line.StartsWith("data: ")) continue;
+            using var stream = await response!.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
 
-            var json = line["data: ".Length..];
-            if (json == "[DONE]") break;
-
-            JsonDocument doc;
-            try { doc = JsonDocument.Parse(json); }
-            catch { continue; }
-
-            using (doc)
+            while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
-                if (!doc.RootElement.TryGetProperty("candidates", out var candidates)) continue;
-                if (candidates.GetArrayLength() == 0) continue;
-                if (!candidates[0].TryGetProperty("content", out var content)) continue;
-                if (!content.TryGetProperty("parts", out var parts)) continue;
-                if (parts.GetArrayLength() == 0) continue;
-                var text = parts[0].TryGetProperty("text", out var textProp) ? textProp.GetString() : null;
-                if (!string.IsNullOrEmpty(text))
-                    yield return text;
+                var line = await reader.ReadLineAsync(ct);
+                if (line is null) break;
+                if (!line.StartsWith("data: ")) continue;
+
+                var json = line["data: ".Length..];
+                if (json == "[DONE]") break;
+
+                JsonDocument doc;
+                try { doc = JsonDocument.Parse(json); }
+                catch { continue; }
+
+                using (doc)
+                {
+                    if (!doc.RootElement.TryGetProperty("candidates", out var candidates)) continue;
+                    if (candidates.GetArrayLength() == 0) continue;
+                    if (!candidates[0].TryGetProperty("content", out var content)) continue;
+                    if (!content.TryGetProperty("parts", out var parts)) continue;
+                    if (parts.GetArrayLength() == 0) continue;
+                    var text = parts[0].TryGetProperty("text", out var textProp) ? textProp.GetString() : null;
+                    if (!string.IsNullOrEmpty(text))
+                        yield return text;
+                }
             }
+        }
+        finally
+        {
+            response?.Dispose();
         }
     }
 
@@ -210,31 +217,38 @@ public class AIReportService : IAIReportService
             yield break;
         }
 
-        using var stream = await response!.Content.ReadAsStreamAsync(ct);
-        using var reader = new StreamReader(stream);
-
-        while (!reader.EndOfStream && !ct.IsCancellationRequested)
+        try
         {
-            var line = await reader.ReadLineAsync(ct);
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            using var stream = await response!.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
 
-            JsonDocument doc;
-            try { doc = JsonDocument.Parse(line); }
-            catch { continue; }
-
-            using (doc)
+            while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
-                var root = doc.RootElement;
-                if (root.TryGetProperty("response", out var tokenProp))
-                {
-                    var token = tokenProp.GetString();
-                    if (!string.IsNullOrEmpty(token))
-                        yield return token;
-                }
+                var line = await reader.ReadLineAsync(ct);
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
-                if (root.TryGetProperty("done", out var doneProp) && doneProp.GetBoolean())
-                    break;
+                JsonDocument doc;
+                try { doc = JsonDocument.Parse(line); }
+                catch { continue; }
+
+                using (doc)
+                {
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("response", out var tokenProp))
+                    {
+                        var token = tokenProp.GetString();
+                        if (!string.IsNullOrEmpty(token))
+                            yield return token;
+                    }
+
+                    if (root.TryGetProperty("done", out var doneProp) && doneProp.GetBoolean())
+                        break;
+                }
             }
+        }
+        finally
+        {
+            response?.Dispose();
         }
     }
 }
