@@ -33,6 +33,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   }, []);
 
   async function generateReport() {
+    if (isGenerating) return;
     setIsGenerating(true);
     setReportText("");
 
@@ -84,6 +85,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             setReportText((prev) => prev + token);
           }
         }
+      }
+
+      // Flush any remaining buffered content
+      buffer += decoder.decode();
+      if (buffer.startsWith("data: ")) {
+        const remaining = buffer.slice("data: ".length);
+        if (remaining) setReportText((prev) => prev + remaining);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
