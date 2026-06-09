@@ -25,6 +25,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
 
   const allMessages: Message[] = [
     ...history,
@@ -41,9 +42,21 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     }
   }, [liveMessages.length]);
 
+  useEffect(() => {
+    return () => { xhrRef.current?.abort(); };
+  }, []);
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (isUploading) return;
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
+    if (file.size > MAX_FILE_BYTES) {
+      toast.error("File must be smaller than 25 MB");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     setPendingFile(file);
     setIsUploading(true);
@@ -57,6 +70,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        xhrRef.current = xhr;
         xhr.upload.onprogress = ev => {
           if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
         };
@@ -79,6 +93,8 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   }
 
   function clearPendingFile() {
+    xhrRef.current?.abort();
+    xhrRef.current = null;
     setPendingFile(null);
     setPendingFileUrl(null);
     setUploadProgress(0);
@@ -86,6 +102,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   }
 
   async function handleSend() {
+    if (isUploading) return;
     const content = input.trim();
     if (!content) return;
     setInput("");
@@ -160,7 +177,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
                   rel="noopener noreferrer"
                   className="text-xs underline text-muted-foreground hover:text-foreground px-1"
                 >
-                  📎 Download attachment
+                  <Paperclip className="size-3 inline mr-1" />Download attachment
                 </a>
               )}
               <span className="text-xs text-muted-foreground px-1">
