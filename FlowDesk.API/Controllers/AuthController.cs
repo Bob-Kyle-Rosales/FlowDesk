@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = isProd,
-            SameSite = SameSiteMode.Strict,
+            SameSite = isProd ? SameSiteMode.None : SameSiteMode.Strict,
             Expires = DateTimeOffset.UtcNow.AddMinutes(15)
         });
 
@@ -93,7 +93,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = isProd,
-            SameSite = SameSiteMode.Strict,
+            SameSite = isProd ? SameSiteMode.None : SameSiteMode.Strict,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
     }
