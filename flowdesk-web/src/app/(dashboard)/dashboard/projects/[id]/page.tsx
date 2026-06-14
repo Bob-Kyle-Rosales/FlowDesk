@@ -43,8 +43,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5269";
-      let res = await fetch(`${apiUrl}/api/projects/${id}/report`, {
+      let res = await fetch(`/api/projects/${id}/report`, {
         method: "POST",
         credentials: "include",
         signal: controller.signal,
@@ -57,7 +56,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           setReportText("[Session expired. Please log in again.]");
           return;
         }
-        res = await fetch(`${apiUrl}/api/projects/${id}/report`, {
+        res = await fetch(`/api/projects/${id}/report`, {
           method: "POST",
           credentials: "include",
           signal: controller.signal,
