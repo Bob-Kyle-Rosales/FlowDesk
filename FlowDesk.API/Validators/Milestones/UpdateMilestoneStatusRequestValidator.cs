@@ -5,7 +5,7 @@ namespace FlowDesk.API.Validators.Milestones;
 
 public class UpdateMilestoneStatusRequestValidator : AbstractValidator<UpdateMilestoneStatusRequest>
 {
-    private static readonly string[] ValidStatuses = ["Pending", "InProgress", "Completed"];
+    private static readonly string[] ValidStatuses = new[] { "Pending", "InProgress", "Completed" };
 
     public UpdateMilestoneStatusRequestValidator()
     {

@@ -5,7 +5,7 @@ namespace FlowDesk.API.Validators.Projects;
 
 public class UpdateProjectRequestValidator : AbstractValidator<UpdateProjectRequest>
 {
-    private static readonly string[] ValidStatuses = ["Active", "Paused", "Completed"];
+    private static readonly string[] ValidStatuses = new[] { "Active", "Paused", "Completed" };
 
     public UpdateProjectRequestValidator()
     {

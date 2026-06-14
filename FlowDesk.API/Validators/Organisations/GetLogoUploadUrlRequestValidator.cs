@@ -6,7 +6,7 @@ namespace FlowDesk.API.Validators.Organisations;
 public class GetLogoUploadUrlRequestValidator : AbstractValidator<GetLogoUploadUrlRequest>
 {
     private static readonly string[] AllowedTypes =
-        ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
+        new[] { "image/jpeg", "image/png", "image/webp", "image/svg+xml" };
 
     public GetLogoUploadUrlRequestValidator()
     {
