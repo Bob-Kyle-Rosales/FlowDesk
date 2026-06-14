@@ -67,6 +67,14 @@ public class AuthController : ControllerBase
         return Ok(new { inviteLink });
     }
 
+    [Authorize]
+    [HttpGet("token")]
+    public IActionResult GetToken()
+    {
+        var token = Request.Cookies["access_token"];
+        return Ok(new { accessToken = token });
+    }
+
     [HttpPost("accept-invite")]
     public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteRequest request)
     {

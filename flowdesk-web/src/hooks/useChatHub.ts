@@ -3,8 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import type { Message } from "@/types";
+import api from "@/lib/api";
 
 type ConnectionState = "connecting" | "connected" | "disconnected";
+
+async function getAccessToken(): Promise<string> {
+  const res = await api.get<{ accessToken: string }>("/api/auth/token");
+  return res.data.accessToken;
+}
 
 export function useChatHub(projectId: string) {
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
@@ -15,7 +21,7 @@ export function useChatHub(projectId: string) {
     const url = `${process.env.NEXT_PUBLIC_SIGNALR_URL ?? "http://localhost:5269"}/hubs/chat`;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(url, { withCredentials: true })
+      .withUrl(url, { accessTokenFactory: getAccessToken })
       .withAutomaticReconnect()
       .build();
 

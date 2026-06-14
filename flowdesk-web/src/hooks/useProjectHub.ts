@@ -3,6 +3,12 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as signalR from "@microsoft/signalr";
+import api from "@/lib/api";
+
+async function getAccessToken(): Promise<string> {
+  const res = await api.get<{ accessToken: string }>("/api/auth/token");
+  return res.data.accessToken;
+}
 
 export function useProjectHub(projectId: string) {
   const queryClient = useQueryClient();
@@ -11,7 +17,7 @@ export function useProjectHub(projectId: string) {
     const url = `${process.env.NEXT_PUBLIC_SIGNALR_URL ?? "http://localhost:5269"}/hubs/project`;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(url, { withCredentials: true })
+      .withUrl(url, { accessTokenFactory: getAccessToken })
       .withAutomaticReconnect()
       .build();
 
