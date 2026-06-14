@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateProject, useClients } from "@/lib/queries";
+import { InviteDialog } from "@/components/InviteDialog";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -25,6 +27,7 @@ interface CreateProjectDialogProps {
 export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const createProject = useCreateProject();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -87,7 +90,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
               {...register("clientId")}
             >
               {noClients ? (
-                <option value="">No clients yet — invite a client first</option>
+                <option value="">No clients yet — invite one first</option>
               ) : (
                 <>
                   <option value="">Select a client…</option>
@@ -99,6 +102,16 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             </select>
             {errors.clientId && <p className="text-xs text-destructive">{errors.clientId.message}</p>}
           </div>
+
+          {noClients && (
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              className="text-sm text-[#E05A2B] hover:underline text-left"
+            >
+              + Invite a client
+            </button>
+          )}
 
           <DialogFooter>
             <Button
@@ -114,6 +127,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </Dialog>
   );
 }

@@ -174,6 +174,15 @@ export function useClients() {
   });
 }
 
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { email: string; name: string; role: "Client" | "AgencyMember" }) =>
+      api.post("/api/auth/invite", data).then(r => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clients"] }),
+  });
+}
+
 // ── Messages ──────────────────────────────────────────────────────────────────
 export function useMessages(projectId: string) {
   return useQuery<Message[]>({

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { InviteDialog } from "@/components/InviteDialog";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +22,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   async function handleLogout() {
     try {
@@ -72,7 +75,17 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        <button
+          onClick={() => setInviteOpen(true)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-[#C4A882]/70 hover:bg-white/6 hover:text-[#F5EDE4]"
+        >
+          <UserPlus className="size-4 shrink-0" />
+          Invite
+        </button>
       </nav>
+
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
       {/* User */}
       <Separator className="bg-white/8" />
