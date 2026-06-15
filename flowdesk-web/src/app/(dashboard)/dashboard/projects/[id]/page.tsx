@@ -23,17 +23,24 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   const [reportText, setReportText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [cooldownSecs, setCooldownSecs] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
+    return () => { abortControllerRef.current?.abort(); };
   }, []);
 
+  // Count down the cooldown every second
+  useEffect(() => {
+    if (cooldownSecs <= 0) return;
+    const t = setTimeout(() => setCooldownSecs((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldownSecs]);
+
+
   async function generateReport() {
-    if (isGenerating) return;
+    if (isGenerating || cooldownSecs > 0) return;
     setIsGenerating(true);
     setReportText("");
 
@@ -99,6 +106,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     } finally {
       await reader?.cancel();
       setIsGenerating(false);
+      setCooldownSecs(60);
     }
   }
 
@@ -155,13 +163,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               size="sm"
               variant="outline"
               onClick={generateReport}
-              disabled={isGenerating}
+              disabled={isGenerating || cooldownSecs > 0}
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="size-3.5 mr-1.5 animate-spin" />
                   Generating…
                 </>
+              ) : cooldownSecs > 0 ? (
+                `Wait ${cooldownSecs}s`
               ) : reportText ? (
                 "Regenerate"
               ) : (
