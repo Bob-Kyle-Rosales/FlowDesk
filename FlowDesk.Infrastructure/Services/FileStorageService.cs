@@ -29,7 +29,9 @@ public class FileStorageService : IFileStorageService
             var s3 = new AmazonS3Client(accessKey, secretKey, new AmazonS3Config
             {
                 ServiceURL = endpoint,
-                ForcePathStyle = true
+                ForcePathStyle = true,
+                SignatureVersion = "4",
+                AuthenticationRegion = "auto"
             });
 
             return (s3, bucket, publicUrl);
