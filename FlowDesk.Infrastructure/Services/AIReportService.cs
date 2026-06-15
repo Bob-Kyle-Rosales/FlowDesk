@@ -125,7 +125,8 @@ public class AIReportService : IAIReportService
         HttpResponseMessage? response = null;
         string? geminiError = null;
 
-        for (int attempt = 0; attempt < 2; attempt++)
+        const int maxAttempts = 3;
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             response?.Dispose();
             using var request = new HttpRequestMessage(HttpMethod.Post, url)
@@ -135,12 +136,21 @@ public class AIReportService : IAIReportService
             try
             {
                 response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-                if ((int)response.StatusCode == 429 && attempt == 0)
+
+                if ((int)response.StatusCode == 429 && attempt < maxAttempts - 1)
                 {
-                    _logger.LogWarning("Gemini rate-limited (429), retrying in 10s");
-                    await Task.Delay(10_000, ct);
+                    // Honour Retry-After if Gemini sends it, otherwise exponential back-off: 10s, 20s, 40s…
+                    int delaySec = (int)Math.Pow(2, attempt) * 10;
+                    if (response.Headers.TryGetValues("Retry-After", out var values) &&
+                        int.TryParse(values.FirstOrDefault(), out int retryAfter))
+                    {
+                        delaySec = retryAfter;
+                    }
+                    _logger.LogWarning("Gemini rate-limited (429), attempt {Attempt}/{Max}, waiting {Delay}s", attempt + 1, maxAttempts, delaySec);
+                    await Task.Delay(delaySec * 1_000, ct);
                     continue;
                 }
+
                 response.EnsureSuccessStatusCode();
                 break;
             }
