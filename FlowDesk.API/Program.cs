@@ -17,6 +17,10 @@ using Scalar.AspNetCore;
 // FlowDesk.API/ or the solution root interchangeably)
 DotNetEnv.Env.TraversePath().Load();
 
+// Npgsql 6+ requires DateTimes to be explicitly UTC for timestamptz columns.
+// This switch makes it treat Unspecified kind the same as UTC (legacy behaviour).
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Database ───────────────────────────────────────────────────────────────────
