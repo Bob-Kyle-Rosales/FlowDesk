@@ -32,8 +32,11 @@ public class AppDbContext : DbContext
         // instance, so each request sees only its own org's data.
         // Use .IgnoreQueryFilters() at the call site for auth/public endpoints that run before
         // a user is authenticated (e.g. login, register, public status page).
+        // Same guard as Project/Invoice/Message: block all rows when no org claim is present.
+        // Auth flows that need cross-org user lookups (login, refresh, invite acceptance)
+        // call .IgnoreQueryFilters() explicitly at the call site.
         modelBuilder.Entity<User>()
-            .HasQueryFilter(u => _currentUserService.OrganisationId == null ||
+            .HasQueryFilter(u => _currentUserService.OrganisationId != null &&
                                  u.OrganisationId == _currentUserService.OrganisationId);
 
         modelBuilder.Entity<Project>()

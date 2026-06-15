@@ -20,6 +20,44 @@ using Scalar.AspNetCore;
 // FlowDesk.API/ or the solution root interchangeably)
 DotNetEnv.Env.TraversePath().Load();
 
+// ── Startup environment variable validation ────────────────────────────────────
+// Fail immediately with a clear list of what's missing rather than crashing at
+// the first feature that uses a missing secret.
+{
+    var missing = new List<string>();
+    void Require(string key) { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key))) missing.Add(key); }
+
+    Require("DATABASE_URL");
+    Require("JWT_SECRET");
+    Require("FRONTEND_URL");
+    // Cloudflare R2
+    Require("CLOUDFLARE_R2_ACCESS_KEY");
+    Require("CLOUDFLARE_R2_SECRET_KEY");
+    Require("CLOUDFLARE_R2_BUCKET");
+    Require("CLOUDFLARE_R2_ENDPOINT");
+    Require("CLOUDFLARE_R2_PUBLIC_URL");
+    // Stripe
+    Require("STRIPE_SECRET_KEY");
+    Require("STRIPE_CLIENT_ID");
+    Require("STRIPE_WEBHOOK_SECRET");
+    // SendGrid
+    Require("SENDGRID_API_KEY");
+    Require("SENDGRID_FROM_EMAIL");
+    // AI — validate provider-specific keys
+    var aiProvider = Environment.GetEnvironmentVariable("AI_PROVIDER") ?? "ollama";
+    if (aiProvider.Equals("gemini", StringComparison.OrdinalIgnoreCase))
+        Require("GEMINI_API_KEY");
+    else
+    {
+        Require("OLLAMA_BASE_URL");
+        Require("OLLAMA_MODEL");
+    }
+
+    if (missing.Count > 0)
+        throw new InvalidOperationException(
+            $"Missing required environment variable(s): {string.Join(", ", missing)}");
+}
+
 // Npgsql 6+ requires DateTimes to be explicitly UTC for timestamptz columns.
 // This switch makes it treat Unspecified kind the same as UTC (legacy behaviour).
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
