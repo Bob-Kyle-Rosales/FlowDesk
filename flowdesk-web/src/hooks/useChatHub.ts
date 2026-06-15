@@ -8,7 +8,7 @@ import api from "@/lib/api";
 type ConnectionState = "connecting" | "connected" | "disconnected";
 
 async function getAccessToken(): Promise<string> {
-  const res = await api.get<{ accessToken: string }>("/api/auth/token");
+  const res = await api.get<{ accessToken: string }>("/api/auth/signalr-token");
   return res.data.accessToken;
 }
 

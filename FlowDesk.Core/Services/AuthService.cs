@@ -236,6 +236,30 @@ public class AuthService : IAuthService
         return new TokenPair(accessToken, rawRefreshToken);
     }
 
+    public string GenerateSignalRToken(string sub, string email, string role, string org, string name)
+    {
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, sub),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, role),
+            new Claim("org", org),
+            new Claim(JwtRegisteredClaimNames.Name, name),
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: "flowdesk-api",
+            audience: "flowdesk-web",
+            claims: claims,
+            expires: DateTime.UtcNow.AddSeconds(60),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     private string GenerateAccessToken(User user)
     {
         var claims = new[]
@@ -252,6 +276,8 @@ public class AuthService : IAuthService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
+            issuer: "flowdesk-api",
+            audience: "flowdesk-web",
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: creds

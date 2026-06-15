@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using FlowDesk.API.Hubs;
 using FlowDesk.API.Middleware;
 using FlowDesk.Core.Interfaces;
@@ -9,6 +11,7 @@ using FlowDesk.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -66,8 +69,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = "flowdesk-api",
+            ValidateAudience = true,
+            ValidAudience = "flowdesk-web",
             ClockSkew = TimeSpan.Zero
         };
 
@@ -105,6 +110,41 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod()));
 
+// ── Rate limiting ──────────────────────────────────────────────────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    static string IpKey(HttpContext ctx) =>
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    static string UserKey(HttpContext ctx) =>
+        ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? ctx.Connection.RemoteIpAddress?.ToString()
+        ?? "unknown";
+
+    // Auth endpoints — keyed by IP
+    options.AddPolicy("login", ctx => RateLimitPartition.GetFixedWindowLimiter(IpKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+
+    options.AddPolicy("register", ctx => RateLimitPartition.GetFixedWindowLimiter(IpKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1) }));
+
+    options.AddPolicy("refresh", ctx => RateLimitPartition.GetFixedWindowLimiter(IpKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+
+    options.AddPolicy("accept-invite", ctx => RateLimitPartition.GetFixedWindowLimiter(IpKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+
+    // SignalR token — keyed by authenticated user; SignalR reconnects call this frequently
+    options.AddPolicy("signalr-token", ctx => RateLimitPartition.GetFixedWindowLimiter(UserKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+
+    // AI report — keyed by user so IP rotation can't bypass it; Gemini free tier is precious
+    options.AddPolicy("ai-report", ctx => RateLimitPartition.GetFixedWindowLimiter(UserKey(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 3, Window = TimeSpan.FromMinutes(1) }));
+});
+
 // ── Validation ─────────────────────────────────────────────────────────────────
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -126,7 +166,14 @@ if (railwayPort is not null)
 
 var app = builder.Build();
 
+// Trust the X-Forwarded-For header from Railway's proxy so rate limiting uses the real client IP
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

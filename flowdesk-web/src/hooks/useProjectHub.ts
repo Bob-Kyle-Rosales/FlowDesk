@@ -6,7 +6,7 @@ import * as signalR from "@microsoft/signalr";
 import api from "@/lib/api";
 
 async function getAccessToken(): Promise<string> {
-  const res = await api.get<{ accessToken: string }>("/api/auth/token");
+  const res = await api.get<{ accessToken: string }>("/api/auth/signalr-token");
   return res.data.accessToken;
 }
 

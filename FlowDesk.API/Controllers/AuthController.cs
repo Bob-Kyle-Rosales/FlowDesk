@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using FlowDesk.Core.DTOs.Auth;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FlowDesk.API.Controllers;
 
@@ -19,6 +21,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var (tokens, user) = await _authService.RegisterAsync(request);
@@ -27,6 +30,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var (tokens, user) = await _authService.LoginAsync(request);
@@ -35,6 +39,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("refresh")]
     public async Task<IActionResult> Refresh()
     {
         var refreshToken = Request.Cookies["refresh_token"];
@@ -68,14 +73,23 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("token")]
-    public IActionResult GetToken()
+    [HttpGet("signalr-token")]
+    [EnableRateLimiting("signalr-token")]
+    public IActionResult GetSignalRToken()
     {
-        var token = Request.Cookies["access_token"];
+        // Issues a 60-second token for SignalR's accessTokenFactory.
+        // Shorter lifetime than the access token because it must be passed in the query string.
+        var sub   = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        var email = User.FindFirst(ClaimTypes.Email)!.Value;
+        var role  = User.FindFirst(ClaimTypes.Role)!.Value;
+        var org   = User.FindFirst("org")!.Value;
+        var name  = User.FindFirst(ClaimTypes.Name)?.Value ?? "";
+        var token = _authService.GenerateSignalRToken(sub, email, role, org, name);
         return Ok(new { accessToken = token });
     }
 
     [HttpPost("accept-invite")]
+    [EnableRateLimiting("accept-invite")]
     public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteRequest request)
     {
         var (tokens, user) = await _authService.AcceptInviteAsync(request);

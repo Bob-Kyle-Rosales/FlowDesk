@@ -2,6 +2,7 @@ using FlowDesk.Core.DTOs.Projects;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FlowDesk.API.Controllers;
 
@@ -55,6 +56,7 @@ public class ProjectsController : ControllerBase
 
     [HttpPost("{id:guid}/report")]
     [Authorize(Policy = "AgencyOnly")]
+    [EnableRateLimiting("ai-report")]
     public async Task StreamReport(Guid id, CancellationToken ct)
     {
         Response.ContentType = "text/event-stream";

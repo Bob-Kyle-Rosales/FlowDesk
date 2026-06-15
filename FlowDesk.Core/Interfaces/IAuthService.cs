@@ -10,4 +10,5 @@ public interface IAuthService
     Task LogoutAsync(string refreshToken);
     Task<string> InviteAsync(InviteRequest request, Guid organisationId);
     Task<(TokenPair Tokens, AuthResponse User)> AcceptInviteAsync(AcceptInviteRequest request);
+    string GenerateSignalRToken(string sub, string email, string role, string org, string name);
 }
