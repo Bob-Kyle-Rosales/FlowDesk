@@ -14,14 +14,12 @@ import { CheckCircle2, Circle, Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { Milestone } from "@/types";
 
-const STATUS_CONFIG: Record<
-  Milestone["status"],
-  { label: string; Icon: React.ElementType; next: Milestone["status"]; classes: string }
-> = {
-  Pending: { label: "Pending", Icon: Circle, next: "InProgress", classes: "bg-gray-100 text-gray-600 border-gray-200" },
-  InProgress: { label: "In Progress", Icon: Clock, next: "Completed", classes: "bg-amber-50 text-amber-700 border-amber-200" },
-  Completed: { label: "Completed", Icon: CheckCircle2, next: "Pending", classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+const STATUS_CONFIG: Record<Milestone["status"], { label: string; Icon: React.ElementType; classes: string }> = {
+  Pending:   { label: "Pending",     Icon: Circle,       classes: "bg-gray-100 text-gray-600 border-gray-200" },
+  InProgress:{ label: "In Progress", Icon: Clock,        classes: "bg-amber-50 text-amber-700 border-amber-200" },
+  Completed: { label: "Completed",   Icon: CheckCircle2, classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
+
 
 const createSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -58,9 +56,10 @@ export function MilestonesTab({ projectId }: { projectId: string }) {
     }
   }
 
-  async function cycleStatus(milestone: Milestone) {
+  async function changeStatus(milestone: Milestone, status: Milestone["status"]) {
+    if (status === milestone.status) return;
     try {
-      await updateStatus.mutateAsync({ id: milestone.id, status: STATUS_CONFIG[milestone.status].next });
+      await updateStatus.mutateAsync({ id: milestone.id, status });
     } catch {
       toast.error("Failed to update status");
     }
@@ -76,17 +75,7 @@ export function MilestonesTab({ projectId }: { projectId: string }) {
         const { label, Icon, classes } = STATUS_CONFIG[milestone.status];
         return (
           <div key={milestone.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow">
-            {isAgency ? (
-              <button
-                onClick={() => cycleStatus(milestone)}
-                className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
-                title="Click to advance status"
-              >
-                <Icon className="size-4" />
-              </button>
-            ) : (
-              <Icon className={`size-4 shrink-0 ${milestone.status === "Completed" ? "text-emerald-600" : "text-muted-foreground"}`} />
-            )}
+            <Icon className={`size-4 shrink-0 ${milestone.status === "Completed" ? "text-emerald-600" : "text-muted-foreground"}`} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">{milestone.title}</p>
               {milestone.dueDate && (
@@ -95,9 +84,21 @@ export function MilestonesTab({ projectId }: { projectId: string }) {
                 </p>
               )}
             </div>
-            <Badge variant="outline" className={`text-xs rounded-full border shrink-0 ${classes}`}>
-              {label}
-            </Badge>
+            {isAgency ? (
+              <select
+                value={milestone.status}
+                onChange={e => changeStatus(milestone, e.target.value as Milestone["status"])}
+                className={`text-xs rounded-full border px-2 py-0.5 font-medium cursor-pointer focus:outline-none ${classes}`}
+              >
+                <option value="Pending">Pending</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+            ) : (
+              <Badge variant="outline" className={`text-xs rounded-full border shrink-0 ${classes}`}>
+                {label}
+              </Badge>
+            )}
           </div>
         );
       })}
