@@ -74,10 +74,10 @@ export function MilestonesTab({ projectId }: { projectId: string }) {
       {milestones?.map(milestone => {
         const { label, Icon, classes } = STATUS_CONFIG[milestone.status];
         return (
-          <div key={milestone.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+          <div key={milestone.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 dark:border-white/[0.06] bg-white dark:bg-[#1A1A1A] hover:shadow-sm dark:hover:shadow-black/20 transition-all">
             <Icon className={`size-4 shrink-0 ${milestone.status === "Completed" ? "text-emerald-600" : "text-muted-foreground"}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">{milestone.title}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{milestone.title}</p>
               {milestone.dueDate && (
                 <p className="text-xs text-muted-foreground">
                   Due {new Date(milestone.dueDate).toLocaleDateString()}

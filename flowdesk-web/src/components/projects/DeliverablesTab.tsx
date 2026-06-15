@@ -152,7 +152,7 @@ export function DeliverablesTab({ projectId }: { projectId: string }) {
         const isUploading = progress !== undefined;
 
         return (
-          <div key={deliverable.id} className="border rounded-lg p-4 bg-card space-y-3">
+          <div key={deliverable.id} className="border border-gray-100 dark:border-white/[0.06] rounded-xl p-4 bg-white dark:bg-[#1A1A1A] space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
