@@ -121,23 +121,42 @@ public class AIReportService : IAIReportService
             contents = new[] { new { parts = new[] { new { text = prompt } } } }
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = JsonContent.Create(body)
-        };
-
         using var http = _httpFactory.CreateClient();
         HttpResponseMessage? response = null;
         string? geminiError = null;
-        try
+
+        for (int attempt = 0; attempt < 2; attempt++)
         {
-            response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-            response.EnsureSuccessStatusCode();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Gemini API call failed");
-            geminiError = "\n\n[Report generation failed. Please try again.]";
+            response?.Dispose();
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(body)
+            };
+            try
+            {
+                response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+                if ((int)response.StatusCode == 429 && attempt == 0)
+                {
+                    _logger.LogWarning("Gemini rate-limited (429), retrying in 10s");
+                    await Task.Delay(10_000, ct);
+                    continue;
+                }
+                response.EnsureSuccessStatusCode();
+                break;
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                var statusCode = response?.StatusCode;
+                _logger.LogError(ex, "Gemini API call failed");
+                geminiError = statusCode is System.Net.HttpStatusCode.TooManyRequests
+                    ? "\n\n[Report generation failed: Gemini rate limit reached. Please wait a minute and try again.]"
+                    : "\n\n[Report generation failed. Please try again.]";
+                break;
+            }
         }
 
         if (geminiError is not null)
