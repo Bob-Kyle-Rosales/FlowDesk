@@ -36,9 +36,8 @@ DotNetEnv.Env.TraversePath().Load();
     Require("CLOUDFLARE_R2_BUCKET");
     Require("CLOUDFLARE_R2_ENDPOINT");
     Require("CLOUDFLARE_R2_PUBLIC_URL");
-    // Stripe
+    // Stripe (STRIPE_CLIENT_ID is only needed for Connect OAuth — omit if not yet enabled)
     Require("STRIPE_SECRET_KEY");
-    Require("STRIPE_CLIENT_ID");
     Require("STRIPE_WEBHOOK_SECRET");
     // SendGrid
     Require("SENDGRID_API_KEY");
