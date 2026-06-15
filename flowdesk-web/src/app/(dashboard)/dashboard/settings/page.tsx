@@ -10,8 +10,7 @@ import {
   useOrganisation,
   useUpdateOrganisation,
   useStripeConnectUrl,
-  useLogoUploadUrl,
-  useUpdateLogo,
+  useUploadLogo,
 } from "@/lib/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,8 +30,7 @@ export default function SettingsPage() {
   const { data: org } = useOrganisation();
   const updateOrg = useUpdateOrganisation();
   const getConnectUrl = useStripeConnectUrl();
-  const getLogoUploadUrl = useLogoUploadUrl();
-  const updateLogo = useUpdateLogo();
+  const uploadLogo = useUploadLogo();
   const [connectingStripe, setConnectingStripe] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -71,24 +69,10 @@ export default function SettingsPage() {
     setUploadProgress(0);
 
     try {
-      const { uploadUrl, fileUrl } = await getLogoUploadUrl.mutateAsync({
-        fileName: file.name,
-        contentType: file.type || "image/png",
+      await uploadLogo.mutateAsync({
+        file,
+        onProgress: pct => setUploadProgress(pct),
       });
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = ev => {
-          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
-        };
-        xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
-        xhr.onerror = () => reject(new Error("Upload failed"));
-        xhr.open("PUT", uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type || "image/png");
-        xhr.send(file);
-      });
-
-      await updateLogo.mutateAsync(fileUrl);
       toast.success("Logo updated");
     } catch {
       toast.error("Logo upload failed");

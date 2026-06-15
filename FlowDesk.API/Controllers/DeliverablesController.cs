@@ -13,15 +13,18 @@ public class DeliverablesController : ControllerBase
 {
     private readonly IDeliverableService _service;
     private readonly IHubContext<ProjectHub> _hub;
+    private readonly IFileStorageService _fileStorage;
     private readonly ILogger<DeliverablesController> _logger;
 
     public DeliverablesController(
         IDeliverableService service,
         IHubContext<ProjectHub> hub,
+        IFileStorageService fileStorage,
         ILogger<DeliverablesController> logger)
     {
         _service = service;
         _hub = hub;
+        _fileStorage = fileStorage;
         _logger = logger;
     }
 
@@ -44,11 +47,19 @@ public class DeliverablesController : ControllerBase
         Guid id, [FromBody] UpdateDeliverableRequest request)
         => Ok(await _service.UpdateAsync(id, request));
 
-    [HttpPost("api/deliverables/{id:guid}/upload-url")]
+    [HttpPost("api/deliverables/{id:guid}/upload")]
     [Authorize(Policy = "AgencyOnly")]
-    public async Task<ActionResult<UploadUrlResponse>> GetUploadUrl(
-        Guid id, [FromBody] GetUploadUrlRequest request)
-        => Ok(await _service.GetUploadUrlAsync(id, request.FileName, request.ContentType));
+    [RequestSizeLimit(100 * 1024 * 1024)]
+    public async Task<ActionResult<DeliverableResponse>> Upload(Guid id, IFormFile file)
+    {
+        if (file.Length == 0) return BadRequest("File is empty.");
+        using var stream = file.OpenReadStream();
+        var fileUrl = await _fileStorage.UploadAsync(
+            $"deliverables/{id}", file.FileName, file.ContentType, stream);
+        var result = await _service.ConfirmUploadAsync(id, fileUrl);
+        await BroadcastDeliverableUpdated(result);
+        return Ok(result);
+    }
 
     [HttpPatch("api/deliverables/{id:guid}")]
     [Authorize(Policy = "AgencyOnly")]

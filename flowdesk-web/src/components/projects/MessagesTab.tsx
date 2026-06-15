@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessages, useSendMessage, useMarkMessagesRead, useMessageUploadUrl } from "@/lib/queries";
+import { useMessages, useSendMessage, useMarkMessagesRead, useUploadMessageFile } from "@/lib/queries";
 import { useChatHub } from "@/hooks/useChatHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   const { liveMessages, connectionState } = useChatHub(projectId);
   const sendMessage = useSendMessage(projectId);
   const markRead = useMarkMessagesRead(projectId);
-  const getUploadUrl = useMessageUploadUrl(projectId);
+  const uploadFile = useUploadMessageFile(projectId);
 
   const [input, setInput] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -25,7 +25,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const allMessages: Message[] = [
     ...history,
@@ -43,7 +43,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
   }, [liveMessages.length]);
 
   useEffect(() => {
-    return () => { xhrRef.current?.abort(); };
+    return () => { abortRef.current?.abort(); };
   }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -51,7 +51,7 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
+    const MAX_FILE_BYTES = 25 * 1024 * 1024;
     if (file.size > MAX_FILE_BYTES) {
       toast.error("File must be smaller than 25 MB");
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -62,42 +62,32 @@ export function MessagesTab({ projectId }: { projectId: string }) {
     setIsUploading(true);
     setUploadProgress(0);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const { uploadUrl, fileUrl } = await getUploadUrl.mutateAsync({
-        fileName: file.name,
-        contentType: file.type || "application/octet-stream",
+      const fileUrl = await uploadFile.mutateAsync({
+        file,
+        signal: controller.signal,
+        onProgress: pct => setUploadProgress(pct),
       });
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhrRef.current = xhr;
-        xhr.upload.onprogress = ev => {
-          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
-        };
-        xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
-        xhr.onerror = () => reject(new Error("Upload failed"));
-        xhr.onabort = () => reject(new Error("aborted"));
-        xhr.open("PUT", uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-        xhr.send(file);
-      });
-
       setPendingFileUrl(fileUrl);
     } catch (err) {
-      if ((err as Error).message !== "aborted") {
+      if ((err as Error).name !== "CanceledError") {
         toast.error("File upload failed");
       }
       setPendingFile(null);
       setPendingFileUrl(null);
     } finally {
+      abortRef.current = null;
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
   function clearPendingFile() {
-    xhrRef.current?.abort();
-    xhrRef.current = null;
+    abortRef.current?.abort();
+    abortRef.current = null;
     setPendingFile(null);
     setPendingFileUrl(null);
     setUploadProgress(0);

@@ -53,17 +53,19 @@ public class MessagesController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { projectId }, message);
     }
 
-    [HttpPost("upload-url")]
+    [HttpPost("upload")]
     [Authorize(Policy = "AgencyOnly")]
-    public async Task<ActionResult<UploadUrlResponse>> GetUploadUrl(
-        Guid projectId, [FromBody] GetMessageUploadUrlRequest request)
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    public async Task<ActionResult<object>> UploadFile(Guid projectId, IFormFile file)
     {
         var project = await _projectService.GetByIdAsync(projectId);
         if (project is null) return NotFound();
+        if (file.Length == 0) return BadRequest("File is empty.");
 
-        var (uploadUrl, fileUrl) = await _fileStorage.GenerateUploadUrlAsync(
-            $"messages/{projectId}/{Guid.NewGuid()}", request.FileName, request.ContentType);
-        return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
+        using var stream = file.OpenReadStream();
+        var fileUrl = await _fileStorage.UploadAsync(
+            $"messages/{projectId}/{Guid.NewGuid()}", file.FileName, file.ContentType, stream);
+        return Ok(new { fileUrl });
     }
 
     [HttpPatch("read")]

@@ -93,20 +93,20 @@ export function useCreateDeliverable(projectId: string) {
   });
 }
 
-export function useGetUploadUrl() {
-  return useMutation({
-    mutationFn: ({ id, fileName, contentType }: { id: string; fileName: string; contentType: string }) =>
-      api.post<UploadUrlResponse>(`/api/deliverables/${id}/upload-url`, { fileName, contentType }).then(r => r.data),
-  });
-}
-
-export function useConfirmUpload(projectId: string) {
+export function useUploadDeliverable(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, fileUrl }: { id: string; fileUrl: string }) =>
-      api.patch<Deliverable>(`/api/deliverables/${id}`, { fileUrl }).then(r => r.data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["projects", projectId, "deliverables"] }),
+    mutationFn: ({ id, file, onProgress }: { id: string; file: File; onProgress?: (pct: number) => void }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<Deliverable>(`/api/deliverables/${id}/upload`, formData, {
+        onUploadProgress: e => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+      }).then(r => r.data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects", projectId, "deliverables"] });
+      queryClient.invalidateQueries({ queryKey: ["projects", projectId, "stats"] });
+    },
   });
 }
 
@@ -149,19 +149,16 @@ export function useUpdateOrganisation() {
   });
 }
 
-export function useLogoUploadUrl() {
-  return useMutation({
-    mutationFn: ({ fileName, contentType }: { fileName: string; contentType: string }) =>
-      api.post<UploadUrlResponse>("/api/organisations/me/logo-upload-url", { fileName, contentType })
-        .then(r => r.data),
-  });
-}
-
-export function useUpdateLogo() {
+export function useUploadLogo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (logoUrl: string) =>
-      api.patch<OrganisationResponse>("/api/organisations/me/logo", { logoUrl }).then(r => r.data),
+    mutationFn: ({ file, onProgress }: { file: File; onProgress?: (pct: number) => void }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<OrganisationResponse>("/api/organisations/me/upload-logo", formData, {
+        onUploadProgress: e => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+      }).then(r => r.data);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["organisation"] }),
   });
 }
@@ -201,13 +198,20 @@ export function useSendMessage(projectId: string) {
   });
 }
 
-export function useMessageUploadUrl(projectId: string) {
+export function useUploadMessageFile(projectId: string) {
   return useMutation({
-    mutationFn: ({ fileName, contentType }: { fileName: string; contentType: string }) =>
-      api.post<UploadUrlResponse>(
-        `/api/projects/${projectId}/messages/upload-url`,
-        { fileName, contentType }
-      ).then(r => r.data),
+    mutationFn: ({ file, signal, onProgress }: { file: File; signal?: AbortSignal; onProgress?: (pct: number) => void }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<{ fileUrl: string }>(
+        `/api/projects/${projectId}/messages/upload`,
+        formData,
+        {
+          signal,
+          onUploadProgress: e => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+        }
+      ).then(r => r.data.fileUrl);
+    },
   });
 }
 

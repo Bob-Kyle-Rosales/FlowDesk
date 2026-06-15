@@ -1,4 +1,3 @@
-using FlowDesk.Core.DTOs.Deliverables;
 using FlowDesk.Core.DTOs.Organisations;
 using FlowDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +11,12 @@ namespace FlowDesk.API.Controllers;
 public class OrganisationsController : ControllerBase
 {
     private readonly IOrganisationService _service;
+    private readonly IFileStorageService _fileStorage;
 
-    public OrganisationsController(IOrganisationService service)
+    public OrganisationsController(IOrganisationService service, IFileStorageService fileStorage)
     {
         _service = service;
+        _fileStorage = fileStorage;
     }
 
     [Authorize(Policy = "AgencyOnly")]
@@ -29,21 +30,16 @@ public class OrganisationsController : ControllerBase
         [FromBody] UpdateOrganisationRequest request)
         => Ok(await _service.UpdateMineAsync(request));
 
-    [Authorize(Policy = "AgencyOnly")]
-    [HttpPost("me/logo-upload-url")]
-    public async Task<ActionResult<UploadUrlResponse>> GetLogoUploadUrl(
-        [FromBody] GetLogoUploadUrlRequest request)
-    {
-        var (uploadUrl, fileUrl) = await _service.GetLogoUploadUrlAsync(
-            request.FileName, request.ContentType);
-        return Ok(new UploadUrlResponse(uploadUrl, fileUrl));
-    }
-
     [Authorize(Policy = "AgencyOwnerOnly")]
-    [HttpPatch("me/logo")]
-    public async Task<ActionResult<OrganisationResponse>> UpdateLogo(
-        [FromBody] UpdateLogoRequest request)
-        => Ok(await _service.UpdateLogoAsync(request));
+    [HttpPost("me/upload-logo")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    public async Task<ActionResult<OrganisationResponse>> UploadLogo(IFormFile file)
+    {
+        if (file.Length == 0) return BadRequest("File is empty.");
+        using var stream = file.OpenReadStream();
+        var fileUrl = await _fileStorage.UploadAsync("logos", file.FileName, file.ContentType, stream);
+        return Ok(await _service.UpdateLogoAsync(new UpdateLogoRequest(fileUrl)));
+    }
 
     [AllowAnonymous]
     [HttpGet("public/{slug}")]

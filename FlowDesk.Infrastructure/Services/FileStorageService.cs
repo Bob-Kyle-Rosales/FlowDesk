@@ -38,6 +38,24 @@ public class FileStorageService : IFileStorageService
         });
     }
 
+    public async Task<string> UploadAsync(string folderPath, string fileName, string contentType, Stream content)
+    {
+        var (s3, bucket, publicUrl) = _r2.Value;
+        var safeName = Path.GetFileName(fileName);
+        var key = $"{folderPath}/{safeName}";
+
+        await s3.PutObjectAsync(new PutObjectRequest
+        {
+            BucketName = bucket,
+            Key = key,
+            InputStream = content,
+            ContentType = contentType,
+            DisablePayloadSigning = true,
+        });
+
+        return $"{publicUrl.TrimEnd('/')}/{key}";
+    }
+
     public Task<(string UploadUrl, string FileUrl)> GenerateUploadUrlAsync(
         string folderPath, string fileName, string contentType)
     {

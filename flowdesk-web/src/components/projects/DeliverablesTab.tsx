@@ -7,7 +7,7 @@ import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useDeliverables, useCreateDeliverable, useMilestones,
-  useGetUploadUrl, useConfirmUpload,
+  useUploadDeliverable,
   useApproveDeliverable, useRequestRevision,
 } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
@@ -48,8 +48,7 @@ export function DeliverablesTab({ projectId }: { projectId: string }) {
   const { data: deliverables, isLoading } = useDeliverables(projectId);
   const { data: milestones } = useMilestones(projectId);
   const createDeliverable = useCreateDeliverable(projectId);
-  const getUploadUrl = useGetUploadUrl();
-  const confirmUpload = useConfirmUpload(projectId);
+  const uploadDeliverable = useUploadDeliverable(projectId);
   const approveDeliverable = useApproveDeliverable(projectId);
   const requestRevision = useRequestRevision(projectId);
 
@@ -72,53 +71,20 @@ export function DeliverablesTab({ projectId }: { projectId: string }) {
   }
 
   const handleFileChange = useCallback(async (deliverableId: string, file: File) => {
-    let uploadUrl = "";
-    let fileUrl = "";
+    setUploadProgress(prev => ({ ...prev, [deliverableId]: 0 }));
     try {
-      ({ uploadUrl, fileUrl } = await getUploadUrl.mutateAsync({
+      await uploadDeliverable.mutateAsync({
         id: deliverableId,
-        fileName: file.name,
-        contentType: file.type || "application/octet-stream",
-      }));
-    } catch (err) {
-      console.error("Failed to get upload URL", err);
-      toast.error("Upload failed — could not get upload URL from server");
-      return;
-    }
-
-    try {
-      // XHR (not fetch) because XHR.upload.onprogress enables the progress bar.
-      // The PUT goes directly to R2 — no auth headers, different domain from the API.
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setUploadProgress(prev => ({ ...prev, [deliverableId]: Math.round(e.loaded / e.total * 100) }));
-          }
-        };
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(`R2 PUT returned ${xhr.status}`));
-        xhr.onerror = () => reject(new Error("R2 PUT network error (possible CORS issue)"));
-        xhr.open("PUT", uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-        xhr.send(file);
+        file,
+        onProgress: pct => setUploadProgress(prev => ({ ...prev, [deliverableId]: pct })),
       });
-    } catch (err) {
-      console.error("R2 upload failed", err);
-      setUploadProgress(prev => { const n = { ...prev }; delete n[deliverableId]; return n; });
-      toast.error(`Upload failed — ${err instanceof Error ? err.message : "R2 error"}`);
-      return;
-    }
-
-    try {
-      await confirmUpload.mutateAsync({ id: deliverableId, fileUrl });
-      setUploadProgress(prev => { const n = { ...prev }; delete n[deliverableId]; return n; });
       toast.success("File uploaded");
-    } catch (err) {
-      console.error("Failed to confirm upload", err);
+    } catch {
+      toast.error("Upload failed");
+    } finally {
       setUploadProgress(prev => { const n = { ...prev }; delete n[deliverableId]; return n; });
-      toast.error("Upload failed — could not save file URL");
     }
-  }, [getUploadUrl, confirmUpload]);
+  }, [uploadDeliverable]);
 
   async function onApprove(id: string) {
     try {
