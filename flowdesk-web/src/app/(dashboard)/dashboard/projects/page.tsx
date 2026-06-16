@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
+import { motion } from "framer-motion";
+import { SpringCard } from "@/components/ui/SpringCard";
 
 const statusStyles: Record<Project["status"], string> = {
   Active:    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
@@ -26,7 +28,12 @@ export default function ProjectsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div
+        className="flex items-center justify-between"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      >
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Projects</h1>
           <p className="text-sm text-gray-400 dark:text-gray-600 mt-0.5">Manage all your client projects</p>
@@ -38,7 +45,7 @@ export default function ProjectsPage() {
         >
           <Plus className="size-3.5" /> New Project
         </Button>
-      </div>
+      </motion.div>
 
       {isLoading && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -68,29 +75,38 @@ export default function ProjectsPage() {
 
       {projects && projects.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
-              <div className="group bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-white/[0.06] p-5 hover:shadow-md dark:hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 leading-snug">
-                    {project.name}
-                  </p>
-                  <span className={`shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full ${statusStyles[project.status]}`}>
-                    {project.status}
-                  </span>
-                </div>
-                <p className="text-[12px] text-gray-400 dark:text-gray-600 mb-4">{project.clientName}</p>
-                {project.description && (
-                  <p className="text-[12.5px] text-gray-500 dark:text-gray-500 line-clamp-2 mb-4">{project.description}</p>
-                )}
-                <div className="h-1.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${progressColor[project.status]}`}
-                    style={{ width: "40%" }}
-                  />
-                </div>
-              </div>
-            </Link>
+          {projects.map((project, i) => (
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: i * 0.06 }}
+            >
+              <SpringCard className="h-full">
+                <Link href={`/dashboard/projects/${project.id}`} className="block h-full">
+                  <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-white/[0.06] p-5 cursor-pointer h-full">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 leading-snug">
+                        {project.name}
+                      </p>
+                      <span className={`shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full ${statusStyles[project.status]}`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-gray-400 dark:text-gray-600 mb-4">{project.clientName}</p>
+                    {project.description && (
+                      <p className="text-[12.5px] text-gray-500 dark:text-gray-500 line-clamp-2 mb-4">{project.description}</p>
+                    )}
+                    <div className="h-1.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${progressColor[project.status]}`}
+                        style={{ width: "40%" }}
+                      />
+                    </div>
+                  </div>
+                </Link>
+              </SpringCard>
+            </motion.div>
           ))}
         </div>
       )}
