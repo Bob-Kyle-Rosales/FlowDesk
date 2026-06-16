@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle, LayoutDashboard, FileText, MessageSquare, Globe } from "lucide-react";
 import { motion } from "framer-motion";
+import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { SpringCard } from "@/components/ui/SpringCard";
 
 // ─── Shared styles ───────────────────────────────────────────────
 const serif = { fontFamily: "var(--font-fraunces)" } as const;
@@ -231,22 +233,26 @@ export default function LandingPage() {
       {/* ── Problem ────────────────────────────────────────────── */}
       <section className="bg-[#2C1A0E] py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#F5EDE4] mb-12 max-w-2xl" style={serif}>
-            Agencies manage great work. The handoff is where things break.
-          </h2>
+          <AnimatedSection>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#F5EDE4] mb-12 max-w-2xl" style={serif}>
+              Agencies manage great work. The handoff is where things break.
+            </h2>
+          </AnimatedSection>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { title: "Feedback buried in email", body: "Revision requests get lost across threads, Slack, and voice notes. Nothing is trackable." },
               { title: "Chasing invoice payments", body: "PDF invoices, manual follow-ups, bank transfers. Getting paid takes longer than the project." },
               { title: "Clients have no visibility", body: "Clients don't know what's done, what's next, or where to find the files you sent last week." },
-            ].map(({ title, body }) => (
-              <div key={title} className="space-y-3">
-                <div className="size-8 rounded-full border border-[#E05A2B]/40 flex items-center justify-center">
-                  <div className="size-2 rounded-full bg-[#E05A2B]" />
+            ].map(({ title, body }, i) => (
+              <AnimatedSection key={title} delay={i * 0.08}>
+                <div className="space-y-3">
+                  <div className="size-8 rounded-full border border-[#E05A2B]/40 flex items-center justify-center">
+                    <div className="size-2 rounded-full bg-[#E05A2B]" />
+                  </div>
+                  <h3 className="font-semibold text-[#F5EDE4]" style={serif}>{title}</h3>
+                  <p className="text-sm text-[#C4A882]/70 leading-relaxed">{body}</p>
                 </div>
-                <h3 className="font-semibold text-[#F5EDE4]" style={serif}>{title}</h3>
-                <p className="text-sm text-[#C4A882]/70 leading-relaxed">{body}</p>
-              </div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -255,19 +261,23 @@ export default function LandingPage() {
       {/* ── Features ───────────────────────────────────────────── */}
       <section className="py-20 bg-[#FAF6F1]">
         <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">What FlowDesk does</p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-12" style={serif}>
-            Everything your agency needs.<br />Nothing it doesn&apos;t.
-          </h2>
+          <AnimatedSection>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">What FlowDesk does</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-12" style={serif}>
+              Everything your agency needs.<br />Nothing it doesn&apos;t.
+            </h2>
+          </AnimatedSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="bg-white rounded-xl p-6 shadow-sm border border-[#E2D9D0] space-y-4">
-                <div className="size-10 rounded-lg bg-[#E05A2B]/8 flex items-center justify-center">
-                  <Icon className="size-5 text-[#E05A2B]" />
-                </div>
-                <h3 className="font-semibold text-[#1A1207]" style={serif}>{title}</h3>
-                <p className="text-sm text-[#7A6559] leading-relaxed">{body}</p>
-              </div>
+            {features.map(({ icon: Icon, title, body }, i) => (
+              <AnimatedSection key={title} delay={i * 0.08}>
+                <SpringCard className="bg-white rounded-xl p-6 shadow-sm border border-[#E2D9D0] space-y-4 h-full">
+                  <div className="size-10 rounded-lg bg-[#E05A2B]/8 flex items-center justify-center">
+                    <Icon className="size-5 text-[#E05A2B]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1A1207]" style={serif}>{title}</h3>
+                  <p className="text-sm text-[#7A6559] leading-relaxed">{body}</p>
+                </SpringCard>
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -276,17 +286,21 @@ export default function LandingPage() {
       {/* ── How It Works ───────────────────────────────────────── */}
       <section id="how-it-works" className="bg-[#2C1A0E] py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">Three steps</p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#F5EDE4] mb-12" style={serif}>
-            Up and running in minutes.
-          </h2>
+          <AnimatedSection>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">Three steps</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#F5EDE4] mb-12" style={serif}>
+              Up and running in minutes.
+            </h2>
+          </AnimatedSection>
           <div className="grid md:grid-cols-3 gap-10">
-            {steps.map(({ n, title, body }) => (
-              <div key={n} className="space-y-4">
-                <span className="text-5xl font-bold text-[#E05A2B]/30" style={serif}>{n}</span>
-                <h3 className="text-lg font-semibold text-[#F5EDE4]" style={serif}>{title}</h3>
-                <p className="text-sm text-[#C4A882]/70 leading-relaxed">{body}</p>
-              </div>
+            {steps.map(({ n, title, body }, i) => (
+              <AnimatedSection key={n} delay={i * 0.1}>
+                <div className="space-y-4">
+                  <span className="text-5xl font-bold text-[#E05A2B]/30" style={serif}>{n}</span>
+                  <h3 className="text-lg font-semibold text-[#F5EDE4]" style={serif}>{title}</h3>
+                  <p className="text-sm text-[#C4A882]/70 leading-relaxed">{body}</p>
+                </div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -295,49 +309,60 @@ export default function LandingPage() {
       {/* ── Dashboard Preview ──────────────────────────────────── */}
       <section className="py-20 bg-[#FAF6F1]">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-3" style={serif}>
-            Built for the work you already do.
-          </h2>
-          <p className="text-[#7A6559] mb-12 max-w-xl">A clean, focused interface that your clients will actually enjoy using.</p>
+          <AnimatedSection>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-3" style={serif}>
+              Built for the work you already do.
+            </h2>
+            <p className="text-[#7A6559] mb-12 max-w-xl">A clean, focused interface that your clients will actually enjoy using.</p>
+          </AnimatedSection>
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Stat card */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-md text-white">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-3">Active Projects</p>
-              <p className="text-4xl font-bold" style={serif}>8</p>
-              <p className="text-xs text-white/60 mt-1">Across 6 clients</p>
-            </div>
-            {/* Project card */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border-t-2 border-t-[#E05A2B] border border-[#E2D9D0]">
-              <div className="flex items-start justify-between mb-3">
-                <p className="font-semibold text-sm text-[#1A1207]" style={serif}>Brand Redesign</p>
-                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">Active</span>
-              </div>
-              <p className="text-xs text-[#7A6559] mb-3">Full brand identity for Acme Inc.</p>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-[#7A6559]">
-                  <span>Progress</span><span>4/6 milestones</span>
+            <AnimatedSection delay={0.05}>
+              <SpringCard className="h-full">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-md text-white h-full">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-3">Active Projects</p>
+                  <p className="text-4xl font-bold" style={serif}>8</p>
+                  <p className="text-xs text-white/60 mt-1">Across 6 clients</p>
                 </div>
-                <div className="h-1.5 bg-[#E2D9D0] rounded-full overflow-hidden">
-                  <div className="h-full w-2/3 bg-[#E05A2B] rounded-full" />
-                </div>
-              </div>
-            </div>
-            {/* Invoice card */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-[#E2D9D0]">
-              <p className="font-semibold text-sm text-[#1A1207] mb-3" style={serif}>Invoice #0042</p>
-              <div className="space-y-2 text-xs">
-                {[["Client", "Acme Inc."], ["Amount", "$4,800"], ["Due", "Jun 15, 2026"]].map(([k, v]) => (
-                  <div key={k} className="flex justify-between">
-                    <span className="text-[#7A6559]">{k}</span>
-                    <span className="font-medium text-[#1A1207]">{v}</span>
+              </SpringCard>
+            </AnimatedSection>
+            <AnimatedSection delay={0.13}>
+              <SpringCard className="h-full">
+                <div className="bg-white rounded-xl p-5 shadow-sm border-t-2 border-t-[#E05A2B] border border-[#E2D9D0] h-full">
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="font-semibold text-sm text-[#1A1207]" style={serif}>Brand Redesign</p>
+                    <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">Active</span>
                   </div>
-                ))}
-              </div>
-              <div className="mt-3 flex justify-between items-center">
-                <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">Sent</span>
-                <button className="text-xs font-medium text-[#E05A2B] hover:underline">Pay now →</button>
-              </div>
-            </div>
+                  <p className="text-xs text-[#7A6559] mb-3">Full brand identity for Acme Inc.</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs text-[#7A6559]">
+                      <span>Progress</span><span>4/6 milestones</span>
+                    </div>
+                    <div className="h-1.5 bg-[#E2D9D0] rounded-full overflow-hidden">
+                      <div className="h-full w-2/3 bg-[#E05A2B] rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </SpringCard>
+            </AnimatedSection>
+            <AnimatedSection delay={0.21}>
+              <SpringCard className="h-full">
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-[#E2D9D0] h-full">
+                  <p className="font-semibold text-sm text-[#1A1207] mb-3" style={serif}>Invoice #0042</p>
+                  <div className="space-y-2 text-xs">
+                    {[["Client", "Acme Inc."], ["Amount", "$4,800"], ["Due", "Jun 15, 2026"]].map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span className="text-[#7A6559]">{k}</span>
+                        <span className="font-medium text-[#1A1207]">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">Sent</span>
+                    <button className="text-xs font-medium text-[#E05A2B] hover:underline">Pay now →</button>
+                  </div>
+                </div>
+              </SpringCard>
+            </AnimatedSection>
           </div>
         </div>
       </section>
@@ -345,58 +370,60 @@ export default function LandingPage() {
       {/* ── Tech Stack ─────────────────────────────────────────── */}
       <section className="bg-[#2C1A0E] py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-[#F5EDE4] mb-8" style={serif}>Built with.</h2>
-          <div className="flex flex-wrap gap-3">
-            {techStack.map((tech) => (
-              <span
-                key={tech}
-                className="border border-white/20 text-[#C4A882]/70 rounded-full px-4 py-1.5 text-xs font-medium"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
+          <AnimatedSection>
+            <h2 className="text-3xl font-bold text-[#F5EDE4] mb-8" style={serif}>Built with.</h2>
+            <div className="flex flex-wrap gap-3">
+              {techStack.map((tech) => (
+                <span key={tech} className="border border-white/20 text-[#C4A882]/70 rounded-full px-4 py-1.5 text-xs font-medium">
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* ── Pricing ────────────────────────────────────────────── */}
       <section className="py-20 bg-[#FAF6F1]">
         <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">Pricing</p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-12" style={serif}>
-            Simple, honest pricing.
-          </h2>
+          <AnimatedSection>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B] mb-3">Pricing</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207] mb-12" style={serif}>
+              Simple, honest pricing.
+            </h2>
+          </AnimatedSection>
           <div className="grid md:grid-cols-3 gap-6">
-            {pricing.map(({ tier, price, sub, features: feats, cta, highlight }) => (
-              <div
-                key={tier}
-                className={`bg-white rounded-xl p-7 shadow-sm flex flex-col gap-6 ${highlight ? "border-2 border-[#E05A2B] ring-4 ring-[#E05A2B]/8" : "border border-[#E2D9D0]"}`}
-              >
-                <div>
-                  {highlight && (
-                    <span className="text-xs font-semibold text-[#E05A2B] uppercase tracking-widest mb-2 block">Most popular</span>
-                  )}
-                  <h3 className="text-lg font-bold text-[#1A1207]" style={serif}>{tier}</h3>
-                  <div className="flex items-baseline gap-1 mt-2">
-                    <span className="text-4xl font-bold text-[#1A1207]" style={serif}>{price}</span>
-                    <span className="text-sm text-[#7A6559]">/{sub}</span>
+            {pricing.map(({ tier, price, sub, features: feats, cta, highlight }, i) => (
+              <AnimatedSection key={tier} delay={i * 0.1}>
+                <SpringCard className="h-full">
+                  <div className={`bg-white rounded-xl p-7 shadow-sm flex flex-col gap-6 h-full ${highlight ? "border-2 border-[#E05A2B] ring-4 ring-[#E05A2B]/8" : "border border-[#E2D9D0]"}`}>
+                    <div>
+                      {highlight && (
+                        <span className="text-xs font-semibold text-[#E05A2B] uppercase tracking-widest mb-2 block">Most popular</span>
+                      )}
+                      <h3 className="text-lg font-bold text-[#1A1207]" style={serif}>{tier}</h3>
+                      <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-4xl font-bold text-[#1A1207]" style={serif}>{price}</span>
+                        <span className="text-sm text-[#7A6559]">/{sub}</span>
+                      </div>
+                    </div>
+                    <ul className="space-y-2.5 flex-1">
+                      {feats.map((f) => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm text-[#7A6559]">
+                          <CheckCircle className="size-4 text-[#E05A2B] shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      href={tier === "Agency" ? "#contact" : "/register"}
+                      className={`text-center text-sm font-semibold py-2.5 rounded-md transition-colors ${highlight ? "bg-[#E05A2B] text-white hover:bg-[#C94E22]" : "border border-[#E2D9D0] text-[#1A1207] hover:border-[#E05A2B] hover:text-[#E05A2B]"}`}
+                    >
+                      {cta}
+                    </a>
                   </div>
-                </div>
-                <ul className="space-y-2.5 flex-1">
-                  {feats.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-[#7A6559]">
-                      <CheckCircle className="size-4 text-[#E05A2B] shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                      <a
-                  href={tier === "Agency" ? "#contact" : "/register"}
-                  className={`text-center text-sm font-semibold py-2.5 rounded-md transition-colors ${highlight ? "bg-[#E05A2B] text-white hover:bg-[#C94E22]" : "border border-[#E2D9D0] text-[#1A1207] hover:border-[#E05A2B] hover:text-[#E05A2B]"}`}
-                >
-                  {cta}
-                </a>
-              </div>
+                </SpringCard>
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -405,63 +432,67 @@ export default function LandingPage() {
       {/* ── Contact ────────────────────────────────────────────── */}
       <section id="contact" className="bg-[#FAF6F1] py-20 border-t border-[#E2D9D0]">
         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-start">
-          <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B]">Get in touch</p>
-            <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207]" style={serif}>
-              Let&apos;s talk about your agency.
-            </h2>
-            <p className="text-[#7A6559] leading-relaxed max-w-md">
-              Interested in the Agency plan or have questions about how FlowDesk fits your workflow? Send us a message and we&apos;ll get back to you within one business day.
-            </p>
-            <a
-              href="mailto:rosalesbobkyle@gmail.com"
-              className="inline-flex items-center gap-2 text-[#E05A2B] font-medium hover:underline text-sm"
+          <AnimatedSection>
+            <div className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B]">Get in touch</p>
+              <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207]" style={serif}>
+                Let&apos;s talk about your agency.
+              </h2>
+              <p className="text-[#7A6559] leading-relaxed max-w-md">
+                Interested in the Agency plan or have questions about how FlowDesk fits your workflow? Send us a message and we&apos;ll get back to you within one business day.
+              </p>
+              <a
+                href="mailto:rosalesbobkyle@gmail.com"
+                className="inline-flex items-center gap-2 text-[#E05A2B] font-medium hover:underline text-sm"
+              >
+                rosalesbobkyle@gmail.com
+              </a>
+            </div>
+          </AnimatedSection>
+          <AnimatedSection delay={0.1}>
+            <form
+              action="mailto:rosalesbobkyle@gmail.com"
+              method="get"
+              encType="text/plain"
+              className="bg-white rounded-xl border border-[#E2D9D0] shadow-sm p-7 space-y-5"
             >
-              rosalesbobkyle@gmail.com
-            </a>
-          </div>
-          <form
-            action="mailto:rosalesbobkyle@gmail.com"
-            method="get"
-            encType="text/plain"
-            className="bg-white rounded-xl border border-[#E2D9D0] shadow-sm p-7 space-y-5"
-          >
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#1A1207]">Name</label>
-                <input
-                  name="name"
-                  type="text"
-                  placeholder="Full name"
-                  className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
-                />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[#1A1207]">Name</label>
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Full name"
+                    className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[#1A1207]">Email</label>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="Work email"
+                    className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#1A1207]">Email</label>
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Work email"
-                  className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
+                <label className="text-xs font-medium text-[#1A1207]">Message</label>
+                <textarea
+                  name="body"
+                  rows={4}
+                  placeholder="How can we help you?"
+                  className="w-full rounded-md border border-[#E2D9D0] px-3 py-2 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B] resize-none"
                 />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-[#1A1207]">Message</label>
-              <textarea
-                name="body"
-                rows={4}
-                placeholder="How can we help you?"
-                className="w-full rounded-md border border-[#E2D9D0] px-3 py-2 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B] resize-none"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full h-11 bg-[#E05A2B] hover:bg-[#C94E22] text-white text-sm font-semibold rounded-md transition-colors"
-            >
-              Send message
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="w-full h-11 bg-[#E05A2B] hover:bg-[#C94E22] text-white text-sm font-semibold rounded-md transition-colors"
+              >
+                Send message
+              </button>
+            </form>
+          </AnimatedSection>
         </div>
       </section>
 
