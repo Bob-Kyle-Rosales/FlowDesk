@@ -50,9 +50,9 @@ public class DeliverablesController : ControllerBase
     [HttpPost("api/deliverables/{id:guid}/upload")]
     [Authorize(Policy = "AgencyOnly")]
     [RequestSizeLimit(100 * 1024 * 1024)]
-    public async Task<ActionResult<DeliverableResponse>> Upload(Guid id, IFormFile file)
+    public async Task<ActionResult<DeliverableResponse>> Upload(Guid id, IFormFile? file)
     {
-        if (file.Length == 0) return BadRequest("File is empty.");
+        if (file is null || file.Length == 0) return BadRequest("No file received.");
         using var stream = file.OpenReadStream();
         var fileUrl = await _fileStorage.UploadAsync(
             $"deliverables/{id}", file.FileName, file.ContentType, stream);

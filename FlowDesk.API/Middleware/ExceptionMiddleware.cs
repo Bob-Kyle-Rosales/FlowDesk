@@ -1,3 +1,4 @@
+using Amazon.Runtime;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowDesk.API.Middleware;
@@ -37,6 +38,7 @@ public class ExceptionMiddleware
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             InvalidOperationException => (StatusCodes.Status400BadRequest, "Bad Request"),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+            AmazonServiceException => (StatusCodes.Status502BadGateway, "File Storage Error"),
             _ => (StatusCodes.Status500InternalServerError, "Internal Server Error")
         };
 
