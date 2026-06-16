@@ -1,8 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CheckCircle, LayoutDashboard, FileText, MessageSquare, Globe } from "lucide-react";
+import { motion } from "framer-motion";
+import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { SpringCard } from "@/components/ui/SpringCard";
 
 // ─── Shared styles ───────────────────────────────────────────────
 const serif = { fontFamily: "var(--font-fraunces)" } as const;
+
+// ─── Spring configs ──────────────────────────────────────────────
+const spring = { type: "spring" as const, stiffness: 380, damping: 26, mass: 0.8 };
+const springSnap = { type: "spring" as const, stiffness: 500, damping: 28 };
+
+const heroContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.4 } },
+};
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  show:   { opacity: 1, y: 0, transition: spring },
+};
 
 // ─── Data ────────────────────────────────────────────────────────
 const features = [
@@ -84,12 +103,22 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FAF6F1] text-[#1A1207]">
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[#FAF6F1]/95 backdrop-blur-sm border-b border-[#E2D9D0]">
+      <motion.header
+        initial={{ y: -64, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ...spring, delay: 0.05 }}
+        className="sticky top-0 z-50 bg-[#FAF6F1]/95 backdrop-blur-sm border-b border-[#E2D9D0]"
+      >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-md bg-[#E05A2B] flex items-center justify-center shadow-sm">
+            <motion.div
+              initial={{ scale: 0, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ ...spring, delay: 0.2 }}
+              className="size-8 rounded-md bg-[#E05A2B] flex items-center justify-center shadow-sm"
+            >
               <span className="text-white font-bold text-sm leading-none" style={serif}>F</span>
-            </div>
+            </motion.div>
             <span className="font-semibold text-lg text-[#1A1207]" style={serif}>FlowDesk</span>
           </div>
           <nav className="flex items-center gap-4">
@@ -99,46 +128,68 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm font-medium text-[#7A6559] hover:text-[#1A1207] transition-colors">
               Sign in
             </Link>
-            <Link
-              href="/register"
-              className="text-sm font-semibold bg-[#E05A2B] text-white px-4 py-2 rounded-md hover:bg-[#C94E22] transition-colors"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ ...spring, delay: 0.35 }}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
             >
-              Get started
-            </Link>
+              <Link
+                href="/register"
+                className="text-sm font-semibold bg-[#E05A2B] text-white px-4 py-2 rounded-md hover:bg-[#C94E22] transition-colors"
+              >
+                Get started
+              </Link>
+            </motion.div>
           </nav>
         </div>
-      </header>
+      </motion.header>
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-24 grid lg:grid-cols-2 gap-16 items-center">
-        <div className="space-y-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B]">
+        <motion.div
+          className="space-y-6"
+          variants={heroContainer}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.p variants={heroItem} className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B]">
             Client portals for agencies
-          </p>
-          <h1 className="text-5xl lg:text-6xl font-bold text-[#1A1207] leading-tight" style={serif}>
+          </motion.p>
+          <motion.h1 variants={heroItem} className="text-5xl lg:text-6xl font-bold text-[#1A1207] leading-tight" style={serif}>
             Your clients deserve a better experience.
-          </h1>
-          <p className="text-lg text-[#7A6559] max-w-lg leading-relaxed">
+          </motion.h1>
+          <motion.p variants={heroItem} className="text-lg text-[#7A6559] max-w-lg leading-relaxed">
             FlowDesk gives every client a branded portal to track projects, approve deliverables, and pay invoices — without the endless email threads.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 bg-[#E05A2B] text-white font-semibold px-6 py-3 rounded-md hover:bg-[#C94E22] transition-colors"
-            >
-              Get started free <ArrowRight className="size-4" />
-            </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center gap-2 border border-[#E2D9D0] text-[#1A1207] font-medium px-6 py-3 rounded-md hover:border-[#E05A2B] hover:text-[#E05A2B] transition-colors"
-            >
-              See how it works
-            </a>
-          </div>
-        </div>
+          </motion.p>
+          <motion.div variants={heroItem} className="flex flex-wrap gap-3 pt-2">
+            <motion.div whileHover={{ y: -3, scale: 1.04 }} whileTap={{ scale: 0.94 }} transition={springSnap}>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 bg-[#E05A2B] text-white font-semibold px-6 py-3 rounded-md hover:bg-[#C94E22] transition-colors"
+              >
+                Get started free <ArrowRight className="size-4" />
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={springSnap}>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center gap-2 border border-[#E2D9D0] text-[#1A1207] font-medium px-6 py-3 rounded-md hover:border-[#E05A2B] hover:text-[#E05A2B] transition-colors"
+              >
+                See how it works
+              </a>
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
         {/* Dashboard mock */}
-        <div className="relative">
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ ...spring, delay: 0.5 }}
+        >
           <div className="rounded-xl overflow-hidden shadow-2xl border border-[#E2D9D0]">
             {/* Mock browser chrome */}
             <div className="bg-[#F0EBE4] px-4 py-3 flex items-center gap-2 border-b border-[#E2D9D0]">
@@ -176,7 +227,7 @@ export default function LandingPage() {
           </div>
           {/* Decorative blur */}
           <div className="absolute -bottom-4 -right-4 size-32 bg-[#E05A2B]/10 rounded-full blur-2xl -z-10" />
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Problem ────────────────────────────────────────────── */}
