@@ -10,9 +10,10 @@ import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { MilestonesTab } from "@/components/projects/MilestonesTab";
 import { DeliverablesTab } from "@/components/projects/DeliverablesTab";
 import { MessagesTab } from "@/components/projects/MessagesTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -24,6 +25,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [reportText, setReportText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [cooldownSecs, setCooldownSecs] = useState(0);
+  const [activeTab, setActiveTab] = useState("milestones");
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -129,30 +131,44 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="p-6 space-y-6">
-      <Link href="/dashboard/projects" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
-        <ArrowLeft className="size-4" /> Projects
-      </Link>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      >
+        <Link href="/dashboard/projects" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
+          <ArrowLeft className="size-4" /> Projects
+        </Link>
+      </motion.div>
 
-      <ProjectHeader project={project} stats={stats} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: 0.08 }}
+      >
+        <ProjectHeader project={project} stats={stats} />
+      </motion.div>
 
-      <Tabs defaultValue="milestones">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
           <TabsTrigger value="messages">Messages</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="milestones">
-          <MilestonesTab projectId={id} />
-        </TabsContent>
-
-        <TabsContent value="deliverables">
-          <DeliverablesTab projectId={id} />
-        </TabsContent>
-
-        <TabsContent value="messages">
-          <MessagesTab projectId={id} />
-        </TabsContent>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+          >
+            {activeTab === "milestones" && <MilestonesTab projectId={id} />}
+            {activeTab === "deliverables" && <DeliverablesTab projectId={id} />}
+            {activeTab === "messages" && <MessagesTab projectId={id} />}
+          </motion.div>
+        </AnimatePresence>
       </Tabs>
 
       {isAgency && (
