@@ -66,7 +66,7 @@ export default function LoginPage() {
             id="email"
             type="email"
             placeholder="Email Address"
-            className="h-11 bg-white border-[#C4A882] focus-visible:ring-[#E05A2B]/30"
+            className="h-11 bg-white border-[#C4A882] text-[#1A0E05] placeholder:text-[#B0978A] focus-visible:ring-[#E05A2B]/30"
             {...register("email")}
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
@@ -78,7 +78,7 @@ export default function LoginPage() {
             id="password"
             type="password"
             placeholder="Password"
-            className="h-11 bg-white border-[#C4A882] focus-visible:ring-[#E05A2B]/30"
+            className="h-11 bg-white border-[#C4A882] text-[#1A0E05] placeholder:text-[#B0978A] focus-visible:ring-[#E05A2B]/30"
             {...register("password")}
           />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}

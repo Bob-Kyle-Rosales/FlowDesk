@@ -134,4 +134,14 @@
   html {
     @apply font-sans;
   }
+
+  /* Override browser autofill background on auth forms */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #1A0E05 !important;
+    caret-color: #1A0E05 !important;
+  }
 }
