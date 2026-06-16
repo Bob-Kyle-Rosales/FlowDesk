@@ -65,7 +65,7 @@ export default function LoginPage() {
           <Input
             id="email"
             type="email"
-            placeholder="you@agency.com"
+            placeholder="name@example.com"
             className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30"
             {...register("email")}
           />
