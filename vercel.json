@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "installCommand": "cd flowdesk-web && npm install",
+  "buildCommand": "cd flowdesk-web && npm run build",
+  "outputDirectory": "flowdesk-web/.next"
+}
