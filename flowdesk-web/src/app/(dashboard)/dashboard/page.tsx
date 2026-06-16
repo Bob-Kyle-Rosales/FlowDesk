@@ -5,6 +5,8 @@ import { useProjects } from "@/lib/queries";
 import { FolderKanban, Users, FileText, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { SpringCard } from "@/components/ui/SpringCard";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -22,7 +24,12 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div className="border-b border-border pb-6">
+      <motion.div
+        className="border-b border-border pb-6"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      >
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-1">
           {user?.organisationName}
         </p>
@@ -33,50 +40,65 @@ export default function DashboardPage() {
           Welcome back,<br />
           <span className="text-primary">{user?.name?.split(" ")[0]}.</span>
         </h1>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="border shadow-none bg-card hover:shadow-sm transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-                <Icon className="size-4 text-primary/60" />
-              </div>
-              <p className="text-3xl font-bold text-foreground" style={{ fontFamily: "var(--font-fraunces)" }}>
-                {value}
-              </p>
-            </CardContent>
-          </Card>
+        {stats.map(({ label, value, icon: Icon }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: 0.1 + i * 0.06 }}
+          >
+            <SpringCard className="h-full">
+              <Card className="border shadow-none bg-card h-full">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+                    <Icon className="size-4 text-primary/60" />
+                  </div>
+                  <p className="text-3xl font-bold text-foreground" style={{ fontFamily: "var(--font-fraunces)" }}>
+                    {value}
+                  </p>
+                </CardContent>
+              </Card>
+            </SpringCard>
+          </motion.div>
         ))}
       </div>
 
-      <Card className="border shadow-none bg-card">
-        <CardContent className="p-5">
-          <h2 className="text-lg font-bold text-foreground mb-4" style={{ fontFamily: "var(--font-fraunces)" }}>
-            Recent Projects
-          </h2>
-          {(!projects || projects.length === 0) ? (
-            <div className="py-8 text-center">
-              <div className="size-12 rounded-full bg-primary/8 flex items-center justify-center mx-auto mb-3">
-                <FolderKanban className="size-5 text-primary/50" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: 0.4 }}
+      >
+        <Card className="border shadow-none bg-card">
+          <CardContent className="p-5">
+            <h2 className="text-lg font-bold text-foreground mb-4" style={{ fontFamily: "var(--font-fraunces)" }}>
+              Recent Projects
+            </h2>
+            {(!projects || projects.length === 0) ? (
+              <div className="py-8 text-center">
+                <div className="size-12 rounded-full bg-primary/8 flex items-center justify-center mx-auto mb-3">
+                  <FolderKanban className="size-5 text-primary/50" />
+                </div>
+                <p className="text-sm font-medium text-foreground">Nothing here yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Activity will appear as you use FlowDesk.</p>
               </div>
-              <p className="text-sm font-medium text-foreground">Nothing here yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Activity will appear as you use FlowDesk.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {projects.slice(0, 5).map(p => (
-                <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="flex items-center gap-3 py-1.5 hover:opacity-75 transition-opacity">
-                  <div className="size-2 rounded-full bg-primary shrink-0" />
-                  <span className="text-sm text-foreground font-medium flex-1">{p.name}</span>
-                  <span className="text-xs text-muted-foreground">{p.clientName}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="space-y-2">
+                {projects.slice(0, 5).map(p => (
+                  <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="flex items-center gap-3 py-1.5 hover:opacity-75 transition-opacity">
+                    <div className="size-2 rounded-full bg-primary shrink-0" />
+                    <span className="text-sm text-foreground font-medium flex-1">{p.name}</span>
+                    <span className="text-xs text-muted-foreground">{p.clientName}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
