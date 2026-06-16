@@ -10,7 +10,8 @@ const api = axios.create({
     ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5269")
     : "",
   withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  // No Content-Type default — axios sets application/json for objects automatically
+  // and multipart/form-data (with boundary) for FormData. A hardcoded default breaks uploads.
 });
 
 api.interceptors.response.use(
