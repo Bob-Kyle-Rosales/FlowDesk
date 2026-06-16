@@ -26,13 +26,15 @@ public class FileStorageService : IFileStorageService
             var secretKey = configuration["CLOUDFLARE_R2_SECRET_KEY"]
                 ?? throw new InvalidOperationException("CLOUDFLARE_R2_SECRET_KEY is not set.");
 
-            var s3 = new AmazonS3Client(accessKey, secretKey, new AmazonS3Config
+            var credentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
+            var s3Config = new AmazonS3Config
             {
                 ServiceURL = endpoint,
                 ForcePathStyle = true,
-                SignatureVersion = "4",
-                AuthenticationRegion = "auto"
-            });
+            };
+            // Must be set after construction — setting in initializer is ignored by some SDK versions
+            s3Config.AuthenticationRegion = "auto";
+            var s3 = new AmazonS3Client(credentials, s3Config);
 
             return (s3, bucket, publicUrl);
         });
