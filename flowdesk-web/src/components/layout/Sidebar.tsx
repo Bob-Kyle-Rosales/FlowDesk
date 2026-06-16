@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { InviteDialog } from "@/components/InviteDialog";
 
@@ -27,6 +28,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   const router    = useRouter();
   const { theme, setTheme } = useTheme();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   async function handleLogout() {
     try {
@@ -68,23 +71,36 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {nav.map(({ href, label, icon: Icon, exact }) => {
+        {nav.map(({ href, label, icon: Icon, exact }, i) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
-            <Link
+            <motion.div
               key={href}
-              href={href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                active
-                  ? "bg-[#FFF4EF] text-[#E05A2B] dark:bg-[#E05A2B]/12 dark:text-[#F5855A]"
-                  : "text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-white/[0.04] hover:text-gray-800 dark:hover:text-gray-200"
-              )}
+              initial={{ opacity: 0, scale: 0.75 }}
+              animate={mounted ? { opacity: 1, scale: 1 } : {}}
+              transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: i * 0.06 }}
             >
-              <Icon className="size-[18px] shrink-0" />
-              {label}
-            </Link>
+              <Link
+                href={href}
+                onClick={onClose}
+                className={cn(
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                  active
+                    ? "text-[#E05A2B] dark:text-[#F5855A]"
+                    : "text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-white/[0.04] hover:text-gray-800 dark:hover:text-gray-200"
+                )}
+              >
+                {active && (
+                  <motion.div
+                    layoutId={onClose ? undefined : "nav-indicator"}
+                    className="absolute inset-0 rounded-xl bg-[#FFF4EF] dark:bg-[#E05A2B]/12"
+                    transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                  />
+                )}
+                <Icon className="size-[18px] shrink-0 relative z-10" />
+                <span className="relative z-10">{label}</span>
+              </Link>
+            </motion.div>
           );
         })}
 
