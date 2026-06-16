@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
 import { CreateInvoiceDialog } from "@/components/invoices/CreateInvoiceDialog";
 import type { Invoice } from "@/types";
+import { motion } from "framer-motion";
 
 const statusColor: Record<Invoice["status"], string> = {
   Draft:   "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-500",
@@ -28,9 +29,14 @@ export default function InvoicesPage() {
           <h1 className="text-2xl font-semibold">Invoices</h1>
           <p className="text-muted-foreground text-sm mt-1">Track payments from your clients</p>
         </div>
-        <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" /> New Invoice
-        </Button>
+        <motion.div
+          whileTap={{ scale: 0.94 }}
+          transition={{ type: "spring", stiffness: 500, damping: 28 }}
+        >
+          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" /> New Invoice
+          </Button>
+        </motion.div>
       </div>
 
       {isLoading && (
@@ -73,9 +79,12 @@ export default function InvoicesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {invoices.map(inv => (
-                  <tr
+                {invoices.map((inv, i) => (
+                  <motion.tr
                     key={inv.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8, delay: i * 0.04 }}
                     className="hover:bg-muted/20 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-3">
@@ -95,7 +104,7 @@ export default function InvoicesPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "—"}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
