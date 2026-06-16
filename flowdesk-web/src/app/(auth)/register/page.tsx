@@ -1,11 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,16 +25,18 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const { register: registerUser } = useAuth();
   const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: FormData) {
+    setServerError(null);
     try {
       await registerUser(data.name, data.email, data.password, data.organisationName);
       router.push("/dashboard");
     } catch {
-      toast.error("Failed to create account. Email may already be in use.");
+      setServerError("Failed to create account. Email may already be in use.");
     }
   }
 
@@ -83,6 +85,12 @@ export default function RegisterPage() {
           <Input id="password" type="password" placeholder="At least 8 characters" className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30" {...register("password")} />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
+
+        {serverError && (
+          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+            {serverError}
+          </p>
+        )}
 
         <Button
           type="submit"
