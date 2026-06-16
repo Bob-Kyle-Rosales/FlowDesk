@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle, LayoutDashboard, FileText, MessageSquare, Globe } from "lucide-react";
 import { motion } from "framer-motion";
-import { AnimatedSection } from "@/components/ui/AnimatedSection";
-import { SpringCard } from "@/components/ui/SpringCard";
 
 // ─── Shared styles ───────────────────────────────────────────────
 const serif = { fontFamily: "var(--font-fraunces)" } as const;
