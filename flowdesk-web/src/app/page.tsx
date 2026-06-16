@@ -93,6 +93,9 @@ export default function LandingPage() {
             <span className="font-semibold text-lg text-[#1A1207]" style={serif}>FlowDesk</span>
           </div>
           <nav className="flex items-center gap-4">
+            <a href="#contact" className="text-sm font-medium text-[#7A6559] hover:text-[#1A1207] transition-colors hidden sm:block">
+              Contact
+            </a>
             <Link href="/login" className="text-sm font-medium text-[#7A6559] hover:text-[#1A1207] transition-colors">
               Sign in
             </Link>
@@ -338,15 +341,78 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/register"
+                      <a
+                  href={tier === "Agency" ? "#contact" : "/register"}
                   className={`text-center text-sm font-semibold py-2.5 rounded-md transition-colors ${highlight ? "bg-[#E05A2B] text-white hover:bg-[#C94E22]" : "border border-[#E2D9D0] text-[#1A1207] hover:border-[#E05A2B] hover:text-[#E05A2B]"}`}
                 >
                   {cta}
-                </Link>
+                </a>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Contact ────────────────────────────────────────────── */}
+      <section id="contact" className="bg-[#FAF6F1] py-20 border-t border-[#E2D9D0]">
+        <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-start">
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E05A2B]">Get in touch</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#1A1207]" style={serif}>
+              Let&apos;s talk about your agency.
+            </h2>
+            <p className="text-[#7A6559] leading-relaxed max-w-md">
+              Interested in the Agency plan or have questions about how FlowDesk fits your workflow? Send us a message and we&apos;ll get back to you within one business day.
+            </p>
+            <a
+              href="mailto:rosalesbobkyle@gmail.com"
+              className="inline-flex items-center gap-2 text-[#E05A2B] font-medium hover:underline text-sm"
+            >
+              rosalesbobkyle@gmail.com
+            </a>
+          </div>
+          <form
+            action="mailto:rosalesbobkyle@gmail.com"
+            method="get"
+            encType="text/plain"
+            className="bg-white rounded-xl border border-[#E2D9D0] shadow-sm p-7 space-y-5"
+          >
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#1A1207]">Name</label>
+                <input
+                  name="name"
+                  type="text"
+                  placeholder="Full name"
+                  className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#1A1207]">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Work email"
+                  className="w-full h-10 rounded-md border border-[#E2D9D0] px-3 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B]"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#1A1207]">Message</label>
+              <textarea
+                name="body"
+                rows={4}
+                placeholder="How can we help you?"
+                className="w-full rounded-md border border-[#E2D9D0] px-3 py-2 text-sm text-[#1A1207] placeholder:text-[#C4A882] focus:outline-none focus:ring-2 focus:ring-[#E05A2B]/20 focus:border-[#E05A2B] resize-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full h-11 bg-[#E05A2B] hover:bg-[#C94E22] text-white text-sm font-semibold rounded-md transition-colors"
+            >
+              Send message
+            </button>
+          </form>
         </div>
       </section>
 
@@ -363,6 +429,7 @@ export default function LandingPage() {
           <nav className="flex items-center gap-6 text-sm">
             <Link href="/login" className="text-[#C4A882]/60 hover:text-[#F5EDE4] transition-colors">Login</Link>
             <Link href="/register" className="text-[#C4A882]/60 hover:text-[#F5EDE4] transition-colors">Register</Link>
+            <a href="#contact" className="text-[#C4A882]/60 hover:text-[#F5EDE4] transition-colors">Contact</a>
           </nav>
         </div>
       </footer>
