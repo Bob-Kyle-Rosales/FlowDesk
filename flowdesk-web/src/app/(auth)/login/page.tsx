@@ -51,17 +51,17 @@ export default function LoginPage() {
 
       <div>
         <h2
-          className="text-3xl font-bold text-foreground"
+          className="text-3xl font-bold text-[#1A0E05]"
           style={{ fontFamily: "var(--font-fraunces)" }}
         >
           Sign in
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">Welcome back to your workspace</p>
+        <p className="text-sm text-[#7A6558] mt-1">Welcome back to your workspace</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium text-[#1A0E05]">Email</Label>
           <Input
             id="email"
             type="email"
@@ -73,10 +73,11 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+          <Label htmlFor="password" className="text-sm font-medium text-[#1A0E05]">Password</Label>
           <Input
             id="password"
             type="password"
+            placeholder="Password"
             className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30"
             {...register("password")}
           />

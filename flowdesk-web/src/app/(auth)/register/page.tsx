@@ -52,41 +52,41 @@ export default function RegisterPage() {
 
       <div>
         <h2
-          className="text-3xl font-bold text-foreground"
+          className="text-3xl font-bold text-[#1A0E05]"
           style={{ fontFamily: "var(--font-fraunces)" }}
         >
           Get started
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">Create your free agency workspace</p>
+        <p className="text-sm text-[#7A6558] mt-1">Create your free agency workspace</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-sm font-medium">Your name</Label>
+            <Label htmlFor="name" className="text-sm font-medium text-[#1A0E05]">Your name</Label>
             <Input id="name" placeholder="Full Name" className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="organisationName" className="text-sm font-medium">Agency name</Label>
+            <Label htmlFor="organisationName" className="text-sm font-medium text-[#1A0E05]">Agency name</Label>
             <Input id="organisationName" placeholder="Agency Name" className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30" {...register("organisationName")} />
             {errors.organisationName && <p className="text-xs text-destructive">{errors.organisationName.message}</p>}
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium text-[#1A0E05]">Email</Label>
           <Input id="email" type="email" placeholder="Email Address" className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30" {...register("email")} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+          <Label htmlFor="password" className="text-sm font-medium text-[#1A0E05]">Password</Label>
           <Input id="password" type="password" placeholder="Password" className="h-11 bg-white border-border focus-visible:ring-[#E05A2B]/30" {...register("password")} />
           {errors.password ? (
             <p className="text-xs text-destructive">{errors.password.message}</p>
           ) : (
-            <p className="text-xs text-muted-foreground">At least 8 characters, one uppercase letter, and one number.</p>
+            <p className="text-xs text-[#7A6558]">At least 8 characters, one uppercase letter, and one number.</p>
           )}
         </div>
 
