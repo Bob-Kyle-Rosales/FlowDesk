@@ -52,6 +52,9 @@ public class DeliverablesController : ControllerBase
     [RequestSizeLimit(100 * 1024 * 1024)]
     public async Task<ActionResult<DeliverableResponse>> Upload(Guid id, IFormFile? file)
     {
+        _logger.LogInformation("Upload called: id={Id}, file={File}, contentType={CT}, length={Len}",
+            id, file?.FileName, file?.ContentType, file?.Length);
+
         if (file is null || file.Length == 0) return BadRequest("No file received.");
         using var stream = file.OpenReadStream();
         var fileUrl = await _fileStorage.UploadAsync(
