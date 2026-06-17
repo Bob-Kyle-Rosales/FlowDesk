@@ -220,8 +220,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.MapScalarApiReference(options =>
         options.OpenApiRoutePattern = "/swagger/v1/swagger.json");
-
-    await DataSeeder.SeedAsync(app.Services);
 }
 
 app.UseCors("AllowFrontend");
