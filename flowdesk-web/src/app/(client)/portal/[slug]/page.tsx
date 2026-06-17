@@ -21,13 +21,13 @@ function ProjectCard({ project, slug }: { project: Project; slug: string }) {
     <Link href={`/portal/${slug}/projects/${project.id}`} className="block group">
       <div className="bg-white rounded-xl border shadow-sm p-5 group-hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="font-semibold text-base">{project.name}</h3>
+          <h3 className="font-semibold text-base text-gray-900">{project.name}</h3>
           <Badge className={statusColor[project.status] ?? "bg-gray-100 text-gray-600"}>
             {project.status}
           </Badge>
         </div>
         {project.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
+          <p className="text-sm text-gray-500 mb-3 line-clamp-2">{project.description}</p>
         )}
         {stats && (
           <div className="space-y-1">
@@ -37,7 +37,7 @@ function ProjectCard({ project, slug }: { project: Project; slug: string }) {
                 style={{ width: `${stats.progressPercent}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500">
               {stats.completedMilestones}/{stats.milestoneCount} milestones complete
             </p>
           </div>
@@ -59,7 +59,7 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
 
   if (loading || isLoading) {
     return (
-      <p className="text-sm text-muted-foreground animate-pulse py-8 text-center">
+      <p className="text-sm text-gray-500 animate-pulse py-8 text-center">
         Loading projects…
       </p>
     );
@@ -68,7 +68,7 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
   if (!projects.length) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground text-sm">No projects yet.</p>
+        <p className="text-gray-500 text-sm">No projects yet.</p>
       </div>
     );
   }

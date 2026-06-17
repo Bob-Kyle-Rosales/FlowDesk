@@ -28,7 +28,7 @@ export function PortalNav({ slug, brandColor }: PortalNavProps) {
             style={
               active
                 ? { borderColor: brandColor, color: brandColor }
-                : { borderColor: "transparent", color: "var(--muted-foreground)" }
+                : { borderColor: "transparent", color: "#6b7280" }
             }
           >
             {label}

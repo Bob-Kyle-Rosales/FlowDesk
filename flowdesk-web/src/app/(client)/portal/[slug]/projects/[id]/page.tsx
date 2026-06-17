@@ -35,16 +35,16 @@ type Tab = "milestones" | "deliverables" | "messages";
 
 function MilestonesTab({ milestones }: { milestones: Milestone[] }) {
   if (!milestones.length) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No milestones yet.</p>;
+    return <p className="text-sm text-gray-500 text-center py-8">No milestones yet.</p>;
   }
   return (
     <div className="space-y-3">
       {milestones.map((m) => (
         <div key={m.id} className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between">
           <div>
-            <p className="font-medium text-sm">{m.title}</p>
+            <p className="font-medium text-sm text-gray-900">{m.title}</p>
             {m.dueDate && (
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 Due {new Date(m.dueDate).toLocaleDateString()}
               </p>
             )}
@@ -71,7 +71,7 @@ function DeliverablesTab({
   const [revisionNotes, setRevisionNotes] = useState("");
 
   if (!deliverables.length) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No deliverables yet.</p>;
+    return <p className="text-sm text-gray-500 text-center py-8">No deliverables yet.</p>;
   }
 
   async function handleApprove(id: string) {
@@ -104,9 +104,9 @@ function DeliverablesTab({
         <div key={d.id} className="bg-white rounded-xl border shadow-sm p-4 space-y-3">
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-medium text-sm">{d.name}</p>
+              <p className="font-medium text-sm text-gray-900">{d.name}</p>
               {d.description && (
-                <p className="text-xs text-muted-foreground mt-0.5">{d.description}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{d.description}</p>
               )}
             </div>
             <Badge className={deliverableColor[d.status] ?? "bg-gray-100 text-gray-600"}>
@@ -202,7 +202,7 @@ export default function ProjectDetailPage({
   }, [user, loading, router, slug]);
 
   if (loading || projectLoading) {
-    return <p className="text-sm text-muted-foreground animate-pulse py-8 text-center">Loading…</p>;
+    return <p className="text-sm text-gray-500 animate-pulse py-8 text-center">Loading…</p>;
   }
 
   if (!project) {
@@ -220,11 +220,11 @@ export default function ProjectDetailPage({
       <div className="flex items-center gap-3">
         <Link
           href={`/portal/${slug}`}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          className="text-gray-500 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="size-4" />
         </Link>
-        <h1 className="text-xl font-semibold">{project.name}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{project.name}</h1>
       </div>
 
       <div className="flex gap-1 border-b">
@@ -235,7 +235,7 @@ export default function ProjectDetailPage({
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === key
                 ? "border-violet-600 text-violet-600"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                : "border-transparent text-gray-500 hover:text-gray-900"
             }`}
           >
             {label}

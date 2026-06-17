@@ -24,29 +24,32 @@ DotNetEnv.Env.TraversePath().Load();
 // Fail immediately with a clear list of what's missing rather than crashing at
 // the first feature that uses a missing secret.
 {
+    var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
     var missing = new List<string>();
     void Require(string key) { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key))) missing.Add(key); }
+    // Only required in production — external services aren't needed for local dev/seeding
+    void RequireProd(string key) { if (!isDev) Require(key); }
 
     Require("DATABASE_URL");
     Require("JWT_SECRET");
     Require("FRONTEND_URL");
     // Cloudflare R2
-    Require("CLOUDFLARE_R2_ACCESS_KEY");
-    Require("CLOUDFLARE_R2_SECRET_KEY");
-    Require("CLOUDFLARE_R2_BUCKET");
-    Require("CLOUDFLARE_R2_ENDPOINT");
-    Require("CLOUDFLARE_R2_PUBLIC_URL");
-    // Stripe (STRIPE_CLIENT_ID is only needed for Connect OAuth — omit if not yet enabled)
-    Require("STRIPE_SECRET_KEY");
-    Require("STRIPE_WEBHOOK_SECRET");
+    RequireProd("CLOUDFLARE_R2_ACCESS_KEY");
+    RequireProd("CLOUDFLARE_R2_SECRET_KEY");
+    RequireProd("CLOUDFLARE_R2_BUCKET");
+    RequireProd("CLOUDFLARE_R2_ENDPOINT");
+    RequireProd("CLOUDFLARE_R2_PUBLIC_URL");
+    // Stripe
+    RequireProd("STRIPE_SECRET_KEY");
+    RequireProd("STRIPE_WEBHOOK_SECRET");
     // SendGrid
-    Require("SENDGRID_API_KEY");
-    Require("SENDGRID_FROM_EMAIL");
+    RequireProd("SENDGRID_API_KEY");
+    RequireProd("SENDGRID_FROM_EMAIL");
     // AI — validate provider-specific keys
     var aiProvider = Environment.GetEnvironmentVariable("AI_PROVIDER") ?? "ollama";
     if (aiProvider.Equals("gemini", StringComparison.OrdinalIgnoreCase))
-        Require("GEMINI_API_KEY");
-    else
+        RequireProd("GEMINI_API_KEY");
+    else if (!isDev)
     {
         Require("OLLAMA_BASE_URL");
         Require("OLLAMA_MODEL");
@@ -217,6 +220,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.MapScalarApiReference(options =>
         options.OpenApiRoutePattern = "/swagger/v1/swagger.json");
+
+    await DataSeeder.SeedAsync(app.Services);
 }
 
 app.UseCors("AllowFrontend");

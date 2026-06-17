@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import type { PublicOrganisationResponse } from "@/types";
 import { PortalNav } from "@/components/portal/PortalNav";
+import { PortalLogoutButton } from "@/components/portal/PortalLogoutButton";
 
 export default async function PortalLayout({
   children,
@@ -24,7 +25,7 @@ export default async function PortalLayout({
   const initial = org.name[0]?.toUpperCase() ?? "?";
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-gray-50">
       <header style={{ backgroundColor: brandColor }} className="px-6 py-4 flex items-center gap-3">
         {org.logoUrl ? (
           <Image
@@ -41,7 +42,10 @@ export default async function PortalLayout({
           </div>
         )}
         <span className="text-white font-semibold text-base">{org.name}</span>
-        <span className="ml-auto text-white/60 text-sm">Client Portal</span>
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-white/60 text-sm">Client Portal</span>
+          <PortalLogoutButton />
+        </div>
       </header>
 
       <PortalNav slug={slug} brandColor={brandColor} />

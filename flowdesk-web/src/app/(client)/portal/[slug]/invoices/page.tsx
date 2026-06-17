@@ -27,15 +27,15 @@ function InvoiceRow({
   return (
     <div className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between gap-4">
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">{invoice.title}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="font-medium text-sm text-gray-900 truncate">{invoice.title}</p>
+        <p className="text-xs text-gray-500 mt-0.5">
           {invoice.dueDate
             ? `Due ${new Date(invoice.dueDate).toLocaleDateString()}`
             : "No due date"}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="font-semibold text-sm">
+        <p className="font-semibold text-sm text-gray-900">
           ${invoice.total.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -85,7 +85,7 @@ export default function PortalInvoicesPage() {
 
   if (loading || isLoading) {
     return (
-      <p className="text-sm text-muted-foreground animate-pulse py-8 text-center">
+      <p className="text-sm text-gray-500 animate-pulse py-8 text-center">
         Loading invoices…
       </p>
     );
@@ -94,7 +94,7 @@ export default function PortalInvoicesPage() {
   if (!invoices.length) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground text-sm">No invoices yet.</p>
+        <p className="text-gray-500 text-sm">No invoices yet.</p>
       </div>
     );
   }
