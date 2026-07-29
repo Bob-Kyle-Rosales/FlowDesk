@@ -355,7 +355,7 @@ npm run dev
 
 ```env
 # Database
-DATABASE_URL=Host=localhost;Port=5432;Database=flowdesk;Username=flowdesk;Password=flowdesk
+DATABASE_URL=Host=localhost;Port=5433;Database=flowdesk;Username=flowdesk;Password=flowdesk
 
 # Auth
 JWT_SECRET=           # openssl rand -base64 64
